@@ -314,22 +314,61 @@
     function requestLocation() {
       const gpsBtn = document.getElementById('gps-inline');
       gpsBtn.textContent = '🔄 Locating...';
+      gpsBtn.disabled = true;
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const { latitude, longitude } = position.coords;
-          document.getElementById('latitude').value = latitude.toFixed(4);
-          document.getElementById('longitude').value = longitude.toFixed(4);
-          gpsBtn.textContent = '📍 Use GPS';
+          const { latitude, longitude, accuracy } = position.coords;
+
+          // Store in memory only (privacy-first)
+          window.userLocation = { latitude, longitude, accuracy };
+
+          // Update inputs
+          document.getElementById('latitude').value = latitude.toFixed(6);
+          document.getElementById('longitude').value = longitude.toFixed(6);
+
+          // Auto-search + recenter
           window.search();
-          if (window.map) window.map.setView([latitude, longitude], 15);
+          if (window.map) {
+            window.map.setView([latitude, longitude], 15);
+            // Show accuracy circle
+            addAccuracyCircle(latitude, longitude, accuracy);
+          }
+
+          gpsBtn.textContent = '📍 Use GPS';
+          gpsBtn.disabled = false;
+
+          // Visual haptic feedback
+          gpsBtn.style.transform = 'scale(0.96)';
+          setTimeout(() => { gpsBtn.style.transform = 'scale(1)'; }, 100);
         },
         (error) => {
           gpsBtn.textContent = '📍 Use GPS';
-          console.error('GPS error:', error.message);
+          gpsBtn.disabled = false;
+
+          if (error.code === error.PERMISSION_DENIED) {
+            console.warn('GPS permission denied; fallback to manual entry');
+          } else if (error.code === error.TIMEOUT) {
+            console.warn('GPS timeout (may be indoors)');
+          }
         },
-        { timeout: 10000, enableHighAccuracy: true }
+        { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
       );
+    }
+
+    function addAccuracyCircle(lat, lon, accuracy) {
+      if (window.accuracyCircle) {
+        window.map.removeLayer(window.accuracyCircle);
+      }
+
+      window.accuracyCircle = L.circle([lat, lon], {
+        radius: accuracy,
+        color: '#007AFF',
+        fillColor: '#007AFF',
+        fillOpacity: 0.1,
+        weight: 2,
+        dashArray: '5, 5'
+      }).addTo(window.map);
     }
 
     function loadDefaults() {
