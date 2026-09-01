@@ -313,8 +313,11 @@
 
     function requestLocation() {
       const gpsBtn = document.getElementById('gps-inline');
+      const gpsFab = document.getElementById('gps-fab');
+      const resultsDiv = document.getElementById('results');
       gpsBtn.textContent = '🔄 Locating...';
       gpsBtn.disabled = true;
+      gpsFab.disabled = true;
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -337,6 +340,7 @@
 
           gpsBtn.textContent = '📍 Use GPS';
           gpsBtn.disabled = false;
+          gpsFab.disabled = false;
 
           // Visual haptic feedback
           gpsBtn.style.transform = 'scale(0.96)';
@@ -345,11 +349,16 @@
         (error) => {
           gpsBtn.textContent = '📍 Use GPS';
           gpsBtn.disabled = false;
+          gpsFab.disabled = false;
 
           if (error.code === error.PERMISSION_DENIED) {
-            console.warn('GPS permission denied; fallback to manual entry');
+            resultsDiv.innerHTML = '<div class="error">GPS permission denied. Enable location access in settings.</div>';
           } else if (error.code === error.TIMEOUT) {
-            console.warn('GPS timeout (may be indoors)');
+            resultsDiv.innerHTML = '<div class="error">GPS timeout. Try outdoors or enter coordinates manually.</div>';
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            resultsDiv.innerHTML = '<div class="error">GPS unavailable. Check device location settings.</div>';
+          } else {
+            resultsDiv.innerHTML = '<div class="error">GPS error: ' + error.message + '</div>';
           }
         },
         { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
@@ -357,6 +366,8 @@
     }
 
     function addAccuracyCircle(lat, lon, accuracy) {
+      if (!window.map) return;
+
       if (window.accuracyCircle) {
         window.map.removeLayer(window.accuracyCircle);
       }
