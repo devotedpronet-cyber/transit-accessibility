@@ -2,84 +2,360 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lisbon Transit Accessibility Planner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Transit Acessível">
+  <title>Lisbon Transit Accessibility</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <link rel="manifest" href="manifest.json">
   <style>
+    :root {
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+      --safe-left: env(safe-area-inset-left);
+      --safe-right: env(safe-area-inset-right);
+      --primary: #007AFF;
+      --secondary: #34C759;
+      --text: #000;
+      --text-secondary: #666;
+      --bg: #fff;
+      --border: #e5e5ea;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text: #fff;
+        --text-secondary: #999;
+        --bg: #000;
+        --border: #333;
+      }
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-    .container { max-width: 1000px; margin: 0 auto; }
-    header { text-align: center; color: white; margin-bottom: 30px; }
-    header h1 { font-size: 2em; margin-bottom: 10px; }
-    header p { font-size: 0.95em; opacity: 0.9; }
-    .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .panel { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
-    #map { height: 600px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); }
-    .input-group { margin-bottom: 20px; }
-    label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; }
-    input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
-    input:focus { outline: none; border-color: #0066cc; box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1); }
-    button { background: #0066cc; color: white; padding: 12px 24px; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; width: 100%; font-size: 14px; }
-    button:hover { background: #0052a3; }
-    .results { margin-top: 30px; }
-    .stop { background: #f9f9f9; padding: 15px; margin-bottom: 12px; border-left: 3px solid #0066cc; border-radius: 2px; }
-    .stop-name { font-weight: 600; color: #333; margin-bottom: 4px; }
-    .stop-distance { color: #666; font-size: 13px; }
-    .stop-lines { color: #0066cc; font-size: 13px; }
-    .error { color: #d32f2f; background: #ffebee; padding: 12px; border-radius: 4px; margin-top: 20px; }
-    .empty { color: #999; text-align: center; padding: 20px; }
-    @media (max-width: 900px) { .main-content { grid-template-columns: 1fr; } }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    #map {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .bottom-sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-height: 60vh;
+      background: var(--bg);
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+      padding: 16px;
+      padding-bottom: calc(16px + var(--safe-bottom));
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .sheet-handle {
+      width: 40px;
+      height: 5px;
+      background: var(--border);
+      border-radius: 3px;
+      margin: 8px auto 16px;
+    }
+
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .sheet-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 16px;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      flex: 1;
+      min-height: 44px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:active {
+      background: #0052cc;
+    }
+
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    .btn-secondary:active {
+      background: rgba(0, 122, 255, 0.1);
+    }
+
+    .results {
+      margin-top: 16px;
+    }
+
+    .stop {
+      background: var(--bg);
+      padding: 12px;
+      margin-bottom: 12px;
+      border-left: 4px solid var(--secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .stop:active {
+      background: rgba(0, 122, 255, 0.05);
+    }
+
+    .stop-name {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .stop-distance {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .stop-lines {
+      font-size: 13px;
+      color: var(--primary);
+      margin-top: 4px;
+    }
+
+    .error {
+      color: #FF3B30;
+      background: rgba(255, 59, 48, 0.1);
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 12px;
+    }
+
+    .empty {
+      color: var(--text-secondary);
+      text-align: center;
+      padding: 20px;
+    }
+
+    .gps-btn {
+      position: fixed;
+      bottom: calc(60vh + 16px + var(--safe-bottom));
+      right: 16px;
+      width: 50px;
+      height: 50px;
+      border-radius: 25px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      z-index: 9;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .gps-btn:active {
+      background: #0052cc;
+    }
+
+    @media (min-width: 768px) {
+      .bottom-sheet {
+        max-width: 400px;
+        bottom: auto;
+        left: auto;
+        top: 0;
+        height: 100%;
+        border-radius: 0;
+        max-height: none;
+      }
+
+      .sheet-handle {
+        display: none;
+      }
+
+      .gps-btn {
+        bottom: auto;
+        top: 100px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>🚌 Lisbon Transit Accessibility</h1>
-      <p>Find step-free accessible bus stops</p>
-    </header>
+  <div id="map"></div>
 
-    <div class="main-content">
-      <div class="panel">
-        <h2>Search</h2>
-        <div class="input-group">
-          <label>Your Location (Latitude)</label>
-          <input type="number" id="latitude" placeholder="e.g., 38.7136" step="0.0001" value="38.7136">
-        </div>
-
-        <div class="input-group">
-          <label>Your Location (Longitude)</label>
-          <input type="number" id="longitude" placeholder="e.g., -9.1399" step="0.0001" value="-9.1399">
-        </div>
-
-        <button onclick="search()">Find Accessible Stops</button>
-
-        <div id="results" class="results"></div>
-      </div>
-
-      <div id="map"></div>
+  <div class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2>Find Stops</h2>
     </div>
+
+    <div class="input-group">
+      <label>Latitude</label>
+      <input type="number" id="latitude" placeholder="38.7136" step="0.0001" inputmode="decimal">
+    </div>
+
+    <div class="input-group">
+      <label>Longitude</label>
+      <input type="number" id="longitude" placeholder="-9.1399" step="0.0001" inputmode="decimal">
+    </div>
+
+    <div class="button-group">
+      <button class="btn-primary" onclick="window.search()">Search</button>
+      <button class="btn-secondary" id="gps-inline">📍 Use GPS</button>
+    </div>
+
+    <div id="results" class="results"></div>
   </div>
+
+  <button class="gps-btn" id="gps-fab" title="Recenter on location">📍</button>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script type="module">
-    import { findNearestStepFreeStops, formatResults } from "./app.js";
-    import { initMap, mockStops } from "./map.js";
-
-    let map;
+    import { findNearestStepFreeStops } from "./app.js";
+    import { initMap } from "./map.js";
 
     window.addEventListener('DOMContentLoaded', () => {
       initMap('map');
+      setupGPS();
+      loadDefaults();
+      window.search();
     });
 
+    function setupGPS() {
+      const gpsBtn = document.getElementById('gps-inline');
+      const gpsFab = document.getElementById('gps-fab');
+
+      gpsBtn.addEventListener('click', requestLocation);
+      gpsFab.addEventListener('click', requestLocation);
+
+      if (!navigator.geolocation) {
+        gpsBtn.disabled = true;
+        gpsFab.disabled = true;
+      }
+    }
+
+    function requestLocation() {
+      const gpsBtn = document.getElementById('gps-inline');
+      gpsBtn.textContent = '🔄 Locating...';
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          document.getElementById('latitude').value = latitude.toFixed(4);
+          document.getElementById('longitude').value = longitude.toFixed(4);
+          gpsBtn.textContent = '📍 Use GPS';
+          window.search();
+          if (window.map) window.map.setView([latitude, longitude], 15);
+        },
+        (error) => {
+          gpsBtn.textContent = '📍 Use GPS';
+          console.error('GPS error:', error.message);
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+      );
+    }
+
+    function loadDefaults() {
+      const lat = localStorage.getItem('lastLat') || '38.7136';
+      const lon = localStorage.getItem('lastLon') || '-9.1399';
+      document.getElementById('latitude').value = lat;
+      document.getElementById('longitude').value = lon;
+    }
+
     window.search = function() {
-      const lat = parseFloat(document.getElementById("latitude").value);
-      const lon = parseFloat(document.getElementById("longitude").value);
-      const resultsDiv = document.getElementById("results");
+      const lat = parseFloat(document.getElementById('latitude').value);
+      const lon = parseFloat(document.getElementById('longitude').value);
+      const resultsDiv = document.getElementById('results');
+
+      if (isNaN(lat) || isNaN(lon)) {
+        resultsDiv.innerHTML = '<div class="error">Enter valid coordinates</div>';
+        return;
+      }
+
+      localStorage.setItem('lastLat', lat);
+      localStorage.setItem('lastLon', lon);
 
       try {
         const stops = findNearestStepFreeStops(lat, lon);
         if (stops.length === 0) {
-          resultsDiv.innerHTML = '<div class="empty">No accessible stops found within 2km.</div>';
+          resultsDiv.innerHTML = '<div class="empty">No accessible stops within 2km</div>';
           return;
         }
 
@@ -87,18 +363,15 @@
           .map((stop) => `
             <div class="stop">
               <div class="stop-name">${stop.name}</div>
-              <div class="stop-distance">Distance: ${stop.distance.toFixed(2)} km</div>
-              <div class="stop-lines">Lines: ${stop.line}</div>
+              <div class="stop-distance">${stop.distance.toFixed(2)} km away</div>
+              <div class="stop-lines">${stop.line}</div>
             </div>
           `)
-          .join("");
+          .join('');
       } catch (error) {
-        resultsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+        resultsDiv.innerHTML = `<div class="error">${error.message}</div>`;
       }
     };
-
-    // Auto-search on load
-    window.search();
   </script>
 </body>
 </html>
