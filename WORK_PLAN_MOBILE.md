@@ -6,12 +6,12 @@ Transform transit-accessibility-planner into production iOS-first web app with r
 ## Phase 1: Mobile UX & iOS Design (Day 1)
 
 ### 1.1 iOS-Looking UI
-- [ ] Safe area insets (notch + home indicator)
-- [ ] Native iOS buttons (rounded, system colors)
-- [ ] Haptic feedback on actions (vibration API)
-- [ ] Status bar styling (dark/light mode)
-- [ ] Bottom sheet for results (swipe-to-dismiss)
-- [ ] Large touch targets (min 44x44pt)
+- [x] Safe area insets (notch + home indicator) — `env(safe-area-inset-*)` vars, applied to bottom-sheet padding
+- [x] Native iOS buttons (rounded, system colors) — `--primary`/`--secondary` iOS system colors, 8px radius
+- [x] Haptic feedback on actions (vibration API) — `navigator.vibrate(10)`, feature-detected (Android Chrome only; iOS Safari has no Vibration API, silently no-ops)
+- [x] Status bar styling (dark/light mode) — `apple-mobile-web-app-status-bar-style` + `theme-color` meta (light/dark via `prefers-color-scheme`)
+- [x] Bottom sheet for results (swipe-to-dismiss) — drag handle: >40px drag collapses/expands, <10px = tap-toggle, 10-40px = no-op (avoids jitter misfires, caught + fixed via cavecrew-reviewer)
+- [x] Large touch targets (min 44x44pt) — base `button` rule, `min-height: 44px`
 
 ### 1.2 Layout Refactor
 - [ ] Full-screen map as primary view (mobile-first)
