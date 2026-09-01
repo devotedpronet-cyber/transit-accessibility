@@ -194,6 +194,21 @@
       background: rgba(0, 122, 255, 0.1);
     }
 
+    .suggestions-header {
+      padding: 6px 12px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      pointer-events: none;
+    }
+
+    .suggestion-item .suggestion-distance {
+      float: right;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
     .dest-results-header {
       font-size: 14px;
       font-weight: 600;
@@ -333,6 +348,35 @@
       background: #0052cc;
     }
 
+    .center-pin {
+      position: fixed;
+      left: 50%;
+      top: calc((100vh - 60vh) / 2);
+      transform: translate(-50%, -100%);
+      font-size: 32px;
+      z-index: 15;
+      pointer-events: none;
+      display: none;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+    }
+
+    .center-pin.active {
+      display: block;
+    }
+
+    .set-start-bar {
+      position: fixed;
+      left: 16px;
+      right: 16px;
+      bottom: calc(60vh + 16px + var(--safe-bottom));
+      z-index: 15;
+      display: none;
+    }
+
+    .set-start-bar.active {
+      display: block;
+    }
+
     @media (min-width: 768px) {
       .bottom-sheet {
         max-width: 400px;
@@ -385,10 +429,11 @@
 
     <p class="note">Only 15 metro stations + 9 ferry terminals have confirmed wheelchair access data city-wide. This app shows confirmed-accessible stops only — everything else is unconfirmed, not shown, to avoid implying access that isn't verified.</p>
 
-    <div id="results" class="results"></div>
     <a class="osm-link" href="https://www.openstreetmap.org/note/new" target="_blank" rel="noopener">Report accessibility on OpenStreetMap</a>
   </div>
 
+  <div class="center-pin" id="center-pin">📍</div>
+  <button class="set-start-bar btn-primary" id="set-start-bar" type="button"></button>
   <button class="gps-btn" id="gps-fab" title="Recenter on location">📍</button>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -403,7 +448,9 @@
       await initMap('map');
       setupGPS();
       setupSheetSwipe();
+      setupMapDragOrigin();
       setupAutocomplete('origin-input', 'origin-suggestions', (place) => {
+        cancelMapPinCandidate();
         window.origin = place;
         window.search();
         if (window.map) {
@@ -415,6 +462,7 @@
         window.destination = place;
         window.search();
       });
+      document.getElementById('origin-input').addEventListener('focus', showNearestStopsInOriginDropdown);
       loadDefaults();
       window.search();
     });
@@ -464,6 +512,31 @@
 
       input.addEventListener('blur', () => {
         setTimeout(() => { box.innerHTML = ''; }, 150);
+      });
+    }
+
+    function showNearestStopsInOriginDropdown() {
+      const input = document.getElementById('origin-input');
+      const box = document.getElementById('origin-suggestions');
+      if (!window.origin || input.value.trim() !== '') return;
+      const stops = getStops().filter(s => s.accessibility === 'known-accessible');
+      const nearest = findNearestStops(stops, window.origin.lat, window.origin.lon, 50, false).slice(0, 5);
+      if (nearest.length === 0) return;
+      box.innerHTML = '<div class="suggestions-header">Nearest accessible stops</div>' +
+        nearest.map((s, i) => `<div class="suggestion-item" data-stop-i="${i}">${s.name}<span class="suggestion-distance">${s.distance.toFixed(1)} km</span></div>`).join('');
+      box.querySelectorAll('[data-stop-i]').forEach((el) => {
+        el.addEventListener('click', () => {
+          const stop = nearest[Number(el.dataset.stopI)];
+          input.value = stop.name;
+          box.innerHTML = '';
+          window.origin = { lat: stop.lat, lon: stop.lon, label: stop.name };
+          cancelMapPinCandidate();
+          if (window.map) {
+            setViewAboveSheet(stop.lat, stop.lon, 16);
+            addOrMoveUserMarker(stop.lat, stop.lon);
+          }
+          window.search();
+        });
       });
     }
 
@@ -517,10 +590,11 @@
     }
 
     function requestLocation() {
+      cancelMapPinCandidate();
       if (navigator.vibrate) navigator.vibrate(10);
       const gpsBtn = document.getElementById('gps-inline');
       const gpsFab = document.getElementById('gps-fab');
-      const resultsDiv = document.getElementById('results');
+      const resultsDiv = document.getElementById('origin-suggestions');
       gpsBtn.textContent = '🔄 Locating...';
       gpsBtn.disabled = true;
       gpsFab.disabled = true;
@@ -619,6 +693,65 @@
       }
     }
 
+    let mapPinCandidate = null;
+
+    function setupMapDragOrigin() {
+      const pin = document.getElementById('center-pin');
+      const bar = document.getElementById('set-start-bar');
+      if (!pin || !bar || !window.map) return;
+
+      window.map.on('dragstart', () => {
+        pin.classList.add('active');
+        bar.classList.remove('active');
+        mapPinCandidate = null;
+      });
+
+      window.map.on('dragend', async () => {
+        const center = window.map.getCenter();
+        const lat = center.lat;
+        const lon = center.lng;
+        mapPinCandidate = { lat, lon, label: 'Custom location' };
+        bar.textContent = 'Set as start: Custom location';
+        bar.classList.add('active');
+        try {
+          const res = await fetch(`https://photon.komoot.io/reverse?lon=${lon}&lat=${lat}`);
+          if (res.ok) {
+            const data = await res.json();
+            const p = data.features && data.features[0] && data.features[0].properties;
+            if (p) {
+              const label = [p.name, p.street, p.city, p.country].filter(Boolean).join(', ');
+              const stillCurrent = mapPinCandidate && mapPinCandidate.lat === lat && mapPinCandidate.lon === lon;
+              if (label && stillCurrent) {
+                mapPinCandidate.label = label;
+                bar.textContent = `Set as start: ${label}`;
+              }
+            }
+          }
+        } catch {
+          // Reverse geocode failed — keep the generic "Custom location" label, still usable.
+        }
+      });
+
+      bar.addEventListener('click', () => {
+        if (!mapPinCandidate) return;
+        if (navigator.vibrate) navigator.vibrate(10);
+        window.origin = mapPinCandidate;
+        document.getElementById('origin-input').value = mapPinCandidate.label;
+        pin.classList.remove('active');
+        bar.classList.remove('active');
+        mapPinCandidate = null;
+        window.search();
+      });
+    }
+
+    function cancelMapPinCandidate() {
+      const pin = document.getElementById('center-pin');
+      const bar = document.getElementById('set-start-bar');
+      if (pin) pin.classList.remove('active');
+      if (bar) bar.classList.remove('active');
+      mapPinCandidate = null;
+    }
+
     function loadDefaults() {
       const saved = localStorage.getItem('lastOrigin');
       const place = saved ? JSON.parse(saved) : { lat: 38.7136, lon: -9.1399, label: 'Rossio, Lisboa' };
@@ -651,12 +784,11 @@
 
     window.search = function() {
       if (navigator.vibrate) navigator.vibrate(10);
-      const resultsDiv = document.getElementById('results');
       const destWrap = document.getElementById('dest-results-wrap');
       destWrap.innerHTML = '';
 
       if (!window.origin) {
-        resultsDiv.innerHTML = '<div class="error">Enter an address or use GPS</div>';
+        document.getElementById('origin-suggestions').innerHTML = '<div class="error">Enter an address or use GPS</div>';
         return;
       }
 
@@ -664,12 +796,6 @@
 
       try {
         const stops = getStops();
-        const results = findNearestStops(stops, window.origin.lat, window.origin.lon, 2, true)
-          .filter((s) => s.accessibility === 'known-accessible');
-
-        resultsDiv.innerHTML = results.length === 0
-          ? '<div class="empty">No confirmed-accessible stop within 2km.</div>'
-          : results.map(renderStopCard).join('');
 
         // "Route" — origin accessible stop -> destination accessible stop,
         // via a plain Google Maps deep link (no API key, no embedding Google
@@ -694,7 +820,7 @@
           }
         }
       } catch (error) {
-        resultsDiv.innerHTML = `<div class="error">${error.message}</div>`;
+        document.getElementById('origin-suggestions').innerHTML = `<div class="error">${error.message}</div>`;
       }
     };
   </script>
