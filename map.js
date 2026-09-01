@@ -57,5 +57,6 @@ function filterByAccessibility(wheelchairOnly) {
   renderStops();
 }
 
-export { initMap, renderStops, stops: () => stops, filterByAccessibility };
+export { initMap, renderStops, filterByAccessibility };
 export const mockStops = [];
+export const getStops = () => stops;
