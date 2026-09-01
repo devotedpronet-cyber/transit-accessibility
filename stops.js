@@ -15,7 +15,8 @@
 // 'unknown'. Do not add an 'elevator' field back without a real source.
 
 const STOPS_API = 'https://api.carrismetropolitana.pt/v2/stops';
-const CACHE_KEY = 'stops-lisbon-v4';
+const LINES_API = 'https://api.carrismetropolitana.pt/v2/lines';
+const CACHE_KEY = 'stops-lisbon-v5';
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24h — live API, no need for a stale 7-day cache
 
 // Metro de Lisboa stations confirmed accessible (elevators operational), per Metro de
@@ -96,11 +97,15 @@ export async function loadStops() {
 }
 
 async function fetchFromCarrisMetropolitana() {
-  const res = await fetch(STOPS_API);
-  if (!res.ok) throw new Error(`Carris Metropolitana API returned ${res.status}`);
-  const raw = await res.json();
+  const [stopsRes, lineLabelById] = await Promise.all([
+    fetch(STOPS_API).then(res => {
+      if (!res.ok) throw new Error(`Carris Metropolitana API returned ${res.status}`);
+      return res.json();
+    }),
+    fetchLineLabels(),
+  ]);
 
-  return raw
+  return stopsRes
     .filter(s => s.lat != null && s.lon != null)
     .map(s => ({
       id: s.id,
@@ -111,10 +116,23 @@ async function fetchFromCarrisMetropolitana() {
       // Surface that honestly instead of rendering a fake green/red accessibility badge.
       accessibility: s.wheelchair_boarding === true ? 'known-accessible' : 'unknown',
       municipality: s.municipality_name || '',
-      // line_ids only carries opaque route IDs, not the rider-facing line numbers —
-      // would need a joined /v2/lines lookup to show real line labels. Deferred.
-      lines: '',
+      lines: (s.line_ids || []).map(id => lineLabelById.get(id)).filter(Boolean).join(', '),
     }));
+}
+
+// /v2/lines' `short_name` is the rider-facing line number (e.g. "1001"); `id` is the
+// same opaque ID that stops.line_ids references. Failure here isn't fatal — stops just
+// render without a lines badge, same as before this join existed.
+async function fetchLineLabels() {
+  try {
+    const res = await fetch(LINES_API);
+    if (!res.ok) throw new Error(`Carris Metropolitana lines API returned ${res.status}`);
+    const raw = await res.json();
+    return new Map(raw.map(l => [l.id, l.short_name || l.id]));
+  } catch (error) {
+    console.warn('Line labels unavailable, stops will show without line numbers:', error.message);
+    return new Map();
+  }
 }
 
 function getCached() {
