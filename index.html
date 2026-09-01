@@ -407,7 +407,7 @@
         window.origin = place;
         window.search();
         if (window.map) {
-          window.map.setView([place.lat, place.lon], 15);
+          setViewAboveSheet(place.lat, place.lon, 15);
           addOrMoveUserMarker(place.lat, place.lon);
         }
       });
@@ -537,7 +537,7 @@
           // Auto-search + recenter
           window.search();
           if (window.map) {
-            window.map.setView([latitude, longitude], 15);
+            setViewAboveSheet(latitude, longitude, 15);
             // Show accuracy circle
             addAccuracyCircle(latitude, longitude, accuracy);
             // Show/move persistent "you are here" pin
@@ -594,6 +594,17 @@
       iconSize: [16, 16],
       iconAnchor: [8, 8]
     });
+
+    function setViewAboveSheet(lat, lon, zoom) {
+      if (!window.map) return;
+      window.map.setView([lat, lon], zoom, { animate: false });
+      const sheet = document.querySelector('.bottom-sheet');
+      const sheetHeight = sheet && !sheet.classList.contains('collapsed') ? sheet.getBoundingClientRect().height : 0;
+      const before = window.map.latLngToContainerPoint([lat, lon]);
+      const desiredY = (window.map.getSize().y - sheetHeight) / 2;
+      const dy = desiredY - before.y;
+      window.map.panBy([0, dy], { animate: false });
+    }
 
     function addOrMoveUserMarker(lat, lon) {
       if (!window.map) return;
