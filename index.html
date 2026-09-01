@@ -291,8 +291,8 @@
     import { findNearestStepFreeStops } from "./app.js";
     import { initMap } from "./map.js";
 
-    window.addEventListener('DOMContentLoaded', () => {
-      initMap('map');
+    window.addEventListener('DOMContentLoaded', async () => {
+      await initMap('map');
       setupGPS();
       loadDefaults();
       window.search();

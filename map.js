@@ -9,6 +9,7 @@ let stops = [];
 
 async function initMap(mapId) {
   map = L.map(mapId).setView([38.7223, -9.1393], 12); // Lisbon center
+  window.map = map;
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap, Carris data',
