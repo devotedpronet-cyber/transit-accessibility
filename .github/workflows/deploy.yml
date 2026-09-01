@@ -15,7 +15,7 @@ jobs:
           cp index.html dist/
           cp app.js dist/
           cp map.js dist/
-          cp -r node_modules/leaflet/dist/* dist/
+          cp package.json dist/
       - name: Publish to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
