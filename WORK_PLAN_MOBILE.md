@@ -190,6 +190,13 @@ Transform transit-accessibility-planner into production iOS-first web app with r
 - Full official roster of all 47 accessible Metro stations (currently only 15 of 47 confirmed by name from Metro de Lisboa's own site are in `stops.js`'s `ACCESSIBLE_METRO_STATIONS` overlay — extend if a complete official list surfaces, e.g. from Metro de Lisboa's accessibility page directly rather than news articles).
 - Pedrouços/Algés ferry terminal accessibility status unconfirmed (excluded from the overlay pending real data).
 
+### Requested 2026-09-01 (in progress, this batch)
+
+1. [x] iOS UI/UX design pass on items 2-4 below, via context7 (Apple HIG / iOS patterns) before building.
+2. [x] Route section ("Route via accessible stops") must render directly under the Search/GPS button group, not below the note/results list. — commit c1548e3
+3. [x] Kill the "accessible stops near me" results list. Superseded by turning the "From" field into a dropdown: nearest accessible stops sorted by distance, distance shown per stop, picking one sets it as origin. — built, under review before commit
+4. [x] Bug: the "you are here" map marker and where the map recenters after tapping the GPS button don't match — same coordinate should drive both. — commit 8434bea (`setViewAboveSheet` helper). Also build: tap-and-drag the map to choose the starting location (pin-follows-map-center pattern) — commit 8483d59, reviewed + 2 bugs fixed pre-ship (race condition + closure-scoping in cancel).
+
 ---
 
 ## Deliverables
