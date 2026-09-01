@@ -4,7 +4,18 @@
       "Bash(git config *)",
       "Bash(git push *)",
       "Bash(echo \"--- experiment1 dir ---\"; ls -la /Users/oleg.i/Documents/software/experiment1 2>/dev/null; echo \"--- civic-code-project full tree ---\"; find /private/tmp/civic-code-project -type f -not -path '*/.git/*'; echo \"--- any research/notes files anywhere in tmp ---\"; find /private/tmp -maxdepth 4 -iname \"*research*\" -o -iname \"*haiku*\" -o -iname \"*notes*\" 2>/dev/null | grep -v civic-code-project/.git)",
-      "Bash(find /Users/oleg.i/Documents/software -name \".git\" -type d 2>/dev/null)"
+      "Bash(find /Users/oleg.i/Documents/software -name \".git\" -type d 2>/dev/null)",
+      "WebFetch(domain:websummit.com)",
+      "Bash(gh search *)",
+      "Bash(gh api graphql -f 'query= *)",
+      "WebFetch(domain:dados.gov.pt)",
+      "WebFetch(domain:www.transit.land)",
+      "Bash(git commit -m 'feat: mobile-first iOS design + GPS integration *)",
+      "Bash(git commit -m 'feat: enhance GPS with accuracy circle + privacy-first location *)",
+      "Bash(git commit -m 'feat: integrate real Lisbon GTFS data \\(Phase 3.1-3.2\\) *)",
+      "Bash(gh workflow *)",
+      "Bash(gh run *)",
+      "Bash(git commit *)"
     ]
   }
 }
