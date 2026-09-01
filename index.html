@@ -418,7 +418,6 @@
 
     <div class="button-group">
       <button class="btn-primary" onclick="window.search()">Search</button>
-      <button class="btn-secondary" id="gps-inline">📍 Use GPS</button>
     </div>
 
     <div id="dest-results-wrap"></div>
@@ -573,14 +572,11 @@
     }
 
     function setupGPS() {
-      const gpsBtn = document.getElementById('gps-inline');
       const gpsFab = document.getElementById('gps-fab');
 
-      gpsBtn.addEventListener('click', requestLocation);
       gpsFab.addEventListener('click', requestLocation);
 
       if (!navigator.geolocation) {
-        gpsBtn.disabled = true;
         gpsFab.disabled = true;
       }
     }
@@ -588,11 +584,8 @@
     function requestLocation() {
       cancelMapPinCandidate();
       if (navigator.vibrate) navigator.vibrate(10);
-      const gpsBtn = document.getElementById('gps-inline');
       const gpsFab = document.getElementById('gps-fab');
       const resultsDiv = document.getElementById('origin-suggestions');
-      gpsBtn.textContent = '🔄 Locating...';
-      gpsBtn.disabled = true;
       gpsFab.disabled = true;
 
       navigator.geolocation.getCurrentPosition(
@@ -614,17 +607,13 @@
             addOrMoveUserMarker(latitude, longitude);
           }
 
-          gpsBtn.textContent = '📍 Use GPS';
-          gpsBtn.disabled = false;
           gpsFab.disabled = false;
 
           // Visual haptic feedback
-          gpsBtn.style.transform = 'scale(0.96)';
-          setTimeout(() => { gpsBtn.style.transform = 'scale(1)'; }, 100);
+          gpsFab.style.transform = 'scale(0.96)';
+          setTimeout(() => { gpsFab.style.transform = 'scale(1)'; }, 100);
         },
         (error) => {
-          gpsBtn.textContent = '📍 Use GPS';
-          gpsBtn.disabled = false;
           gpsFab.disabled = false;
 
           if (error.code === error.PERMISSION_DENIED) {
