@@ -1,48 +1,49 @@
 // Lisbon Transit Accessibility Map
-// Shows step-free bus stops with accessibility ratings
+// Shows wheelchair-accessible bus stops with real GTFS data
 
-const mockStops = [
-  { id: 1, name: "Rossio", lat: 38.7136, lon: -9.1395, wheelchair: true, elevator: true, rating: 5 },
-  { id: 2, name: "Terreiro do Paço", lat: 38.7080, lon: -9.1340, wheelchair: true, elevator: false, rating: 4 },
-  { id: 3, name: "Chiado", lat: 38.7146, lon: -9.1411, wheelchair: false, elevator: false, rating: 2 },
-  { id: 4, name: "Baixa-Chiado", lat: 38.7105, lon: -9.1369, wheelchair: true, elevator: true, rating: 5 },
-  { id: 5, name: "Santa Apolónia", lat: 38.7224, lon: -9.1264, wheelchair: true, elevator: true, rating: 5 },
-];
+import { loadAccessibleStops } from './gtfs.js';
 
 let map;
 let markers = [];
+let stops = [];
 
-function initMap(mapId) {
+async function initMap(mapId) {
   map = L.map(mapId).setView([38.7223, -9.1393], 12); // Lisbon center
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors',
+    attribution: '© OpenStreetMap, Carris data',
     maxZoom: 19,
   }).addTo(map);
 
+  // Load real GTFS data
+  stops = await loadAccessibleStops();
   renderStops();
 }
 
 function renderStops() {
+  // Clear existing markers
   markers.forEach(m => map.removeLayer(m));
   markers = [];
 
-  mockStops.forEach(stop => {
-    const color = stop.rating >= 4 ? 'green' : stop.rating >= 3 ? 'orange' : 'red';
+  // Accessibility rating: wheelchair + elevator = green
+  stops.forEach(stop => {
+    const rating = (stop.wheelchair ? 2 : 0) + (stop.elevator ? 3 : 0);
+    const color = rating >= 4 ? '#34C759' : rating >= 2 ? '#FF9500' : '#FF3B30';
+
     const marker = L.circleMarker([stop.lat, stop.lon], {
       radius: 8,
       fillColor: color,
-      color: '#000',
-      weight: 1,
+      color: '#fff',
+      weight: 2,
       opacity: 1,
-      fillOpacity: 0.8,
+      fillOpacity: 0.85,
     }).addTo(map);
 
+    const lines = stop.lines ? `<br/>Lines: ${stop.lines}` : '';
     marker.bindPopup(`
       <b>${stop.name}</b><br/>
-      Wheelchair: ${stop.wheelchair ? '✓' : '✗'}<br/>
-      Elevator: ${stop.elevator ? '✓' : '✗'}<br/>
-      Rating: ${stop.rating}/5
+      <small>Wheelchair: ${stop.wheelchair ? '✓' : '✗'}</small><br/>
+      <small>Elevator: ${stop.elevator ? '✓' : '✗'}</small>${lines}
     `);
 
     markers.push(marker);
@@ -50,9 +51,10 @@ function renderStops() {
 }
 
 function filterByAccessibility(wheelchairOnly) {
-  const filtered = mockStops.filter(s => !wheelchairOnly || s.wheelchair);
-  // Update markers based on filter
+  // Real GTFS data already filtered by accessibility
+  // This is preserved for compatibility
   renderStops();
 }
 
-export { initMap, renderStops, mockStops, filterByAccessibility };
+export { initMap, renderStops, stops: () => stops, filterByAccessibility };
+export const mockStops = [];

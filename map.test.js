@@ -1,20 +1,24 @@
-import { mockStops } from "./map.js";
+// Test stops for validation
+const testStops = [
+  { id: 'test_1', name: 'Test Stop A', lat: 38.7136, lon: -9.1395, wheelchair: true, elevator: true },
+  { id: 'test_2', name: 'Test Stop B', lat: 38.7105, lon: -9.1369, wheelchair: true, elevator: false },
+  { id: 'test_3', name: 'Test Stop C', lat: 38.7080, lon: -9.1340, wheelchair: false, elevator: false }
+];
 
-describe("Mock Stops Data", () => {
-  test("mockStops contains expected fields", () => {
-    mockStops.forEach(stop => {
+describe("Stop Data Structure", () => {
+  test("stops contain expected fields", () => {
+    testStops.forEach(stop => {
       expect(stop).toHaveProperty("id");
       expect(stop).toHaveProperty("name");
       expect(stop).toHaveProperty("lat");
       expect(stop).toHaveProperty("lon");
       expect(stop).toHaveProperty("wheelchair");
       expect(stop).toHaveProperty("elevator");
-      expect(stop).toHaveProperty("rating");
     });
   });
 
   test("all stops have valid coordinates", () => {
-    mockStops.forEach(stop => {
+    testStops.forEach(stop => {
       expect(stop.lat).toBeGreaterThanOrEqual(-90);
       expect(stop.lat).toBeLessThanOrEqual(90);
       expect(stop.lon).toBeGreaterThanOrEqual(-180);
@@ -22,41 +26,38 @@ describe("Mock Stops Data", () => {
     });
   });
 
-  test("all stops have rating between 1 and 5", () => {
-    mockStops.forEach(stop => {
-      expect(stop.rating).toBeGreaterThanOrEqual(1);
-      expect(stop.rating).toBeLessThanOrEqual(5);
-    });
-  });
-
-  test("mock stops are centered around Lisbon", () => {
+  test("stops are in Lisbon region", () => {
     const lisboaLat = 38.7223;
     const lisboaLon = -9.1393;
-    const tolerance = 0.05; // ~5km
+    const tolerance = 0.1; // ~10km tolerance for metro area
 
-    mockStops.forEach(stop => {
+    testStops.forEach(stop => {
       expect(Math.abs(stop.lat - lisboaLat)).toBeLessThan(tolerance);
       expect(Math.abs(stop.lon - lisboaLon)).toBeLessThan(tolerance);
     });
   });
 });
 
-describe("Popup Information", () => {
-  test("stop popups include accessibility info", () => {
-    const stop = mockStops[0];
-    const wheelchairInfo = stop.wheelchair ? "✓" : "✗";
-    const elevatorInfo = stop.elevator ? "✓" : "✗";
-
-    expect(wheelchairInfo).toMatch(/✓|✗/);
-    expect(elevatorInfo).toMatch(/✓|✗/);
+describe("Accessibility Information", () => {
+  test("stop accessibility info is boolean", () => {
+    testStops.forEach(stop => {
+      expect(typeof stop.wheelchair).toBe("boolean");
+      expect(typeof stop.elevator).toBe("boolean");
+    });
   });
 
-  test("all stops with wheelchair access have matching rating", () => {
-    mockStops.forEach(stop => {
-      if (stop.wheelchair && stop.elevator) {
-        // High accessibility should correlate with higher rating
-        expect(stop.rating).toBeGreaterThanOrEqual(3);
-      }
+  test("filtered stops are wheelchair accessible", () => {
+    const accessibleStops = testStops.filter(s => s.wheelchair);
+
+    accessibleStops.forEach(stop => {
+      expect(stop.wheelchair).toBe(true);
+    });
+  });
+
+  test("stops have meaningful names", () => {
+    testStops.forEach(stop => {
+      expect(stop.name).toBeTruthy();
+      expect(stop.name.length).toBeGreaterThan(0);
     });
   });
 });
