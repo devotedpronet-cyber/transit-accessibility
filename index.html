@@ -514,7 +514,7 @@
     function showNearestStopsInOriginDropdown() {
       const input = document.getElementById('origin-input');
       const box = document.getElementById('origin-suggestions');
-      if (!window.origin || input.value.trim() !== '') return;
+      if (!window.origin) return;
       const stops = getStops().filter(s => s.accessibility === 'known-accessible');
       const nearest = findNearestStops(stops, window.origin.lat, window.origin.lon, 50, false).slice(0, 5);
       if (nearest.length === 0) return;
