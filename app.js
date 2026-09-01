@@ -45,6 +45,26 @@ export function findNearestStops(stops, userLat, userLon, maxDistance = 2, acces
     });
 }
 
+// Only ~29 stops city-wide (19 metro stations + 10 ferry terminals) are
+// confirmed accessible. No max-distance cap here on purpose — the honest
+// answer to "nearest accessible stop" can legitimately be far away, and
+// hiding that behind a radius would silently return nothing instead.
+export function nearestAccessibleStop(stops, lat, lon) {
+  if (typeof lat !== "number" || typeof lon !== "number") {
+    throw new Error("Invalid coordinates");
+  }
+  if (!Array.isArray(stops)) {
+    throw new Error("Stops must be an array");
+  }
+
+  const accessible = stops.filter((s) => s.accessibility === "known-accessible");
+  if (accessible.length === 0) return null;
+
+  return accessible
+    .map((stop) => ({ ...stop, distance: getDistance(lat, lon, stop.lat, stop.lon) }))
+    .sort((a, b) => a.distance - b.distance)[0];
+}
+
 export function formatResults(stops) {
   if (!stops || stops.length === 0) {
     return "No stops found within 2km.";

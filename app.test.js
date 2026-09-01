@@ -1,4 +1,4 @@
-import { findNearestStops, formatResults, getDistance } from "./app.js";
+import { findNearestStops, formatResults, getDistance, nearestAccessibleStop } from "./app.js";
 
 const testStops = [
   { id: 1, name: "Rossio", lat: 38.7136, lon: -9.1395, accessibility: "unknown", lines: "1,2,3" },
@@ -63,6 +63,27 @@ describe("findNearestStops", () => {
     for (let i = 1; i < results.length; i++) {
       expect(results[i].distance).toBeGreaterThanOrEqual(results[i - 1].distance);
     }
+  });
+});
+
+describe("nearestAccessibleStop", () => {
+  test("returns nearest stop with known-accessible status only", () => {
+    const stop = nearestAccessibleStop(testStops, 38.7136, -9.1395);
+    expect(stop.id).toBe(2); // Baixa-Chiado, only known-accessible stop
+    expect(stop.accessibility).toBe("known-accessible");
+  });
+
+  test("returns null when no accessible stops exist", () => {
+    const noneAccessible = testStops.map((s) => ({ ...s, accessibility: "unknown" }));
+    expect(nearestAccessibleStop(noneAccessible, 38.7136, -9.1395)).toBeNull();
+  });
+
+  test("throws error on invalid coordinates", () => {
+    expect(() => nearestAccessibleStop(testStops, "invalid", -9.1395)).toThrow("Invalid coordinates");
+  });
+
+  test("throws error when stops is not an array", () => {
+    expect(() => nearestAccessibleStop(null, 38.7136, -9.1395)).toThrow("Stops must be an array");
   });
 });
 

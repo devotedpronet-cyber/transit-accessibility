@@ -131,28 +131,6 @@
       margin-bottom: 20px;
     }
 
-    .toggle-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    .toggle-row label {
-      display: inline;
-      margin-bottom: 0;
-      font-weight: 400;
-      color: var(--text);
-      font-size: 15px;
-    }
-
-    .toggle-row input[type="checkbox"] {
-      width: auto;
-      padding: 0;
-      -webkit-appearance: checkbox;
-      appearance: checkbox;
-    }
-
     .note {
       font-size: 12px;
       color: var(--text-secondary);
@@ -170,6 +148,59 @@
 
     .osm-link:active {
       opacity: 0.7;
+    }
+
+    .autocomplete {
+      position: relative;
+    }
+
+    .suggestions {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 4px);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      max-height: 180px;
+      overflow-y: auto;
+      z-index: 20;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .suggestions:empty {
+      display: none;
+    }
+
+    .suggestion-item {
+      padding: 10px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .suggestion-item:last-child {
+      border-bottom: none;
+    }
+
+    .suggestion-item:active {
+      background: rgba(0, 122, 255, 0.1);
+    }
+
+    .dest-results-header {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin: 20px 0 8px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .route-note {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      margin-bottom: 12px;
     }
 
     button {
@@ -326,14 +357,16 @@
       <h2>Find Stops</h2>
     </div>
 
-    <div class="input-group">
-      <label>Latitude</label>
-      <input type="number" id="latitude" placeholder="38.7136" step="0.0001" inputmode="decimal">
+    <div class="input-group autocomplete">
+      <label>From</label>
+      <input type="text" id="origin-input" placeholder="Address, or use GPS" autocomplete="off">
+      <div id="origin-suggestions" class="suggestions"></div>
     </div>
 
-    <div class="input-group">
-      <label>Longitude</label>
-      <input type="number" id="longitude" placeholder="-9.1399" step="0.0001" inputmode="decimal">
+    <div class="input-group autocomplete">
+      <label>To (optional) — accessible stops near your destination</label>
+      <input type="text" id="dest-input" placeholder="Destination address" autocomplete="off">
+      <div id="dest-suggestions" class="suggestions"></div>
     </div>
 
     <div class="button-group">
@@ -341,14 +374,10 @@
       <button class="btn-secondary" id="gps-inline">📍 Use GPS</button>
     </div>
 
-    <div class="toggle-row">
-      <input type="checkbox" id="accessible-first" checked>
-      <label for="accessible-first">Accessible first</label>
-    </div>
-
-    <p class="note">Most stops don't have confirmed wheelchair-accessibility data; known-accessible stops are shown first when enabled. ~96% of the bus fleet is wheelchair-accessible even where the stop itself isn't confirmed.</p>
+    <p class="note">Only 15 metro stations + 9 ferry terminals have confirmed wheelchair access data city-wide. This app shows confirmed-accessible stops only — everything else is unconfirmed, not shown, to avoid implying access that isn't verified.</p>
 
     <div id="results" class="results"></div>
+    <div id="dest-results-wrap"></div>
     <a class="osm-link" href="https://www.openstreetmap.org/note/new" target="_blank" rel="noopener">Report accessibility on OpenStreetMap</a>
   </div>
 
@@ -356,19 +385,77 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script type="module">
-    import { findNearestStops } from "./app.js";
+    import { findNearestStops, nearestAccessibleStop } from "./app.js";
     import { initMap, getStops } from "./map.js";
+
+    window.origin = null;
+    window.destination = null;
 
     window.addEventListener('DOMContentLoaded', async () => {
       await initMap('map');
       setupGPS();
-      setupAccessibleFirstToggle();
+      setupAutocomplete('origin-input', 'origin-suggestions', (place) => {
+        window.origin = place;
+        window.search();
+        if (window.map) {
+          window.map.setView([place.lat, place.lon], 15);
+          addOrMoveUserMarker(place.lat, place.lon);
+        }
+      });
+      setupAutocomplete('dest-input', 'dest-suggestions', (place) => {
+        window.destination = place;
+        window.search();
+      });
       loadDefaults();
       window.search();
     });
 
-    function setupAccessibleFirstToggle() {
-      document.getElementById('accessible-first').addEventListener('change', window.search);
+    // Photon (Komoot) — CORS-open, keyless, unlike Nominatim which forbids
+    // client-side autocomplete. Biased toward Lisbon via lat/lon params.
+    async function geocode(query) {
+      if (!query || query.trim().length < 3) return [];
+      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&lat=38.7223&lon=-9.1393&zoom=12&limit=5`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Address search unavailable');
+      const data = await res.json();
+      return data.features.map((f) => {
+        const p = f.properties;
+        const label = [p.name, p.street, p.city, p.country].filter(Boolean).join(', ');
+        return { label, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] };
+      });
+    }
+
+    function setupAutocomplete(inputId, suggestionsId, onSelect) {
+      const input = document.getElementById(inputId);
+      const box = document.getElementById(suggestionsId);
+      let debounceTimer;
+
+      input.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        const query = input.value;
+        debounceTimer = setTimeout(async () => {
+          try {
+            const places = await geocode(query);
+            box.innerHTML = places
+              .map((p, i) => `<div class="suggestion-item" data-i="${i}">${p.label}</div>`)
+              .join('');
+            box.querySelectorAll('.suggestion-item').forEach((el) => {
+              el.addEventListener('click', () => {
+                const place = places[Number(el.dataset.i)];
+                input.value = place.label;
+                box.innerHTML = '';
+                onSelect(place);
+              });
+            });
+          } catch {
+            box.innerHTML = '';
+          }
+        }, 350);
+      });
+
+      input.addEventListener('blur', () => {
+        setTimeout(() => { box.innerHTML = ''; }, 150);
+      });
     }
 
     function setupGPS() {
@@ -398,10 +485,8 @@
 
           // Store in memory only (privacy-first)
           window.userLocation = { latitude, longitude, accuracy };
-
-          // Update inputs
-          document.getElementById('latitude').value = latitude.toFixed(6);
-          document.getElementById('longitude').value = longitude.toFixed(6);
+          window.origin = { lat: latitude, lon: longitude, label: 'Current location' };
+          document.getElementById('origin-input').value = 'Current location';
 
           // Auto-search + recenter
           window.search();
@@ -478,49 +563,73 @@
     }
 
     function loadDefaults() {
-      const lat = localStorage.getItem('lastLat') || '38.7136';
-      const lon = localStorage.getItem('lastLon') || '-9.1399';
-      document.getElementById('latitude').value = lat;
-      document.getElementById('longitude').value = lon;
+      const saved = localStorage.getItem('lastOrigin');
+      const place = saved ? JSON.parse(saved) : { lat: 38.7136, lon: -9.1399, label: 'Rossio, Lisboa' };
+      window.origin = place;
+      document.getElementById('origin-input').value = place.label;
+    }
+
+    function renderStopCard(stop) {
+      const accessible = stop.accessibility === 'known-accessible';
+      const badgeClass = accessible ? 'badge-accessible' : 'badge-unknown';
+      const badgeText = accessible ? 'Wheelchair accessible' : 'Accessibility unknown';
+      const lines = stop.lines ? `<div class="stop-lines">${stop.lines}</div>` : '';
+      return `
+        <div class="stop">
+          <div class="stop-name">${stop.name}</div>
+          <div class="stop-distance">${stop.distance.toFixed(2)} km away</div>
+          <div class="stop-badge ${badgeClass}">${badgeText}</div>
+          ${lines}
+        </div>
+      `;
+    }
+
+    function googleDirectionsUrl(a, b) {
+      return `https://www.google.com/maps/dir/?api=1&origin=${a.lat},${a.lon}&destination=${b.lat},${b.lon}&travelmode=transit`;
     }
 
     window.search = function() {
-      const lat = parseFloat(document.getElementById('latitude').value);
-      const lon = parseFloat(document.getElementById('longitude').value);
       const resultsDiv = document.getElementById('results');
+      const destWrap = document.getElementById('dest-results-wrap');
+      destWrap.innerHTML = '';
 
-      if (isNaN(lat) || isNaN(lon)) {
-        resultsDiv.innerHTML = '<div class="error">Enter valid coordinates</div>';
+      if (!window.origin) {
+        resultsDiv.innerHTML = '<div class="error">Enter an address or use GPS</div>';
         return;
       }
 
-      localStorage.setItem('lastLat', lat);
-      localStorage.setItem('lastLon', lon);
+      localStorage.setItem('lastOrigin', JSON.stringify(window.origin));
 
       try {
-        const accessibleFirst = document.getElementById('accessible-first').checked;
-        const stops = findNearestStops(getStops(), lat, lon, undefined, accessibleFirst);
-        if (stops.length === 0) {
-          resultsDiv.innerHTML = '<div class="empty">No stops within 2km</div>';
-          return;
-        }
+        const stops = getStops();
+        const results = findNearestStops(stops, window.origin.lat, window.origin.lon, 2, true)
+          .filter((s) => s.accessibility === 'known-accessible');
 
-        resultsDiv.innerHTML = stops
-          .map((stop) => {
-            const accessible = stop.accessibility === 'known-accessible';
-            const badgeClass = accessible ? 'badge-accessible' : 'badge-unknown';
-            const badgeText = accessible ? 'Wheelchair accessible' : 'Accessibility unknown';
-            const lines = stop.lines ? `<div class="stop-lines">${stop.lines}</div>` : '';
-            return `
-            <div class="stop">
-              <div class="stop-name">${stop.name}</div>
-              <div class="stop-distance">${stop.distance.toFixed(2)} km away</div>
-              <div class="stop-badge ${badgeClass}">${badgeText}</div>
-              ${lines}
-            </div>
-          `;
-          })
-          .join('');
+        resultsDiv.innerHTML = results.length === 0
+          ? '<div class="empty">No confirmed-accessible stop within 2km.</div>'
+          : results.map(renderStopCard).join('');
+
+        // "Route" — origin accessible stop -> destination accessible stop,
+        // via a plain Google Maps deep link (no API key, no embedding Google
+        // content into this Leaflet map — just an outbound link the user
+        // clicks, so it doesn't trip Google's non-Google-basemap ToS clause).
+        if (window.destination) {
+          const originStop = nearestAccessibleStop(stops, window.origin.lat, window.origin.lon);
+          const destStop = nearestAccessibleStop(stops, window.destination.lat, window.destination.lon);
+
+          if (!originStop || !destStop) {
+            destWrap.innerHTML = '<div class="dest-results-header">Route</div><div class="empty">No confirmed-accessible stops found near one end — can\'t suggest an accessible route leg.</div>';
+          } else {
+            destWrap.innerHTML = `
+              <div class="dest-results-header">Route via accessible stops</div>
+              <p class="route-note">No live Lisbon transit routing API exists (checked directly). This finds the nearest confirmed-accessible stop at each end and hands off to Google Maps for the actual transit directions between them.</p>
+              ${renderStopCard(originStop)}
+              <div style="text-align:center;padding:4px 0;color:var(--text-secondary);font-size:13px;">↓ accessible stop to accessible stop ↓</div>
+              ${renderStopCard(destStop)}
+              <a class="btn-primary" style="display:block;text-align:center;text-decoration:none;padding:12px;border-radius:8px;margin-top:8px;" href="${googleDirectionsUrl(originStop, destStop)}" target="_blank" rel="noopener">Get directions on Google Maps</a>
+            `;
+          }
+        }
       } catch (error) {
         resultsDiv.innerHTML = `<div class="error">${error.message}</div>`;
       }

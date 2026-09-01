@@ -26,11 +26,17 @@ Transform transit-accessibility-planner into production iOS-first web app with r
 - [ ] Desktop: Current two-column layout
 - [ ] Touch-friendly spacing everywhere
 
-### 1.4 Accessibility & Data UX (not started)
-- [ ] "Accessible-first" sort toggle in search results (default on; sorts known-accessible stops first without hiding others)
-- [ ] Persistent "you are here" map marker (distinct from the temporary GPS accuracy circle)
-- [ ] Mode-of-transport marker differentiation (bus/tram/metro/rail/ferry)
-- [ ] OSM Notes-based accessibility crowdsourcing report link
+### 1.4 Accessibility & Data UX
+- [x] No toggle — main results list is unconditionally filtered to `accessibility === 'known-accessible'`. Went through two stages: sort-only → real filter behind a checkbox → checkbox removed entirely, per explicit user instruction ("non-accessible i dont want on the app at all"). Do not reintroduce a toggle or an unknown-status escape hatch.
+- [x] Persistent "you are here" map marker (distinct from the temporary GPS accuracy circle)
+- [ ] Mode-of-transport marker differentiation (bus/tram/metro/rail/ferry) — deferred, see Backlog
+- [x] OSM Notes-based accessibility crowdsourcing report link
+
+### 1.5 Address-First Input (binding requirement, done)
+- [x] Removed all lat/lon numeric inputs from the UI — address search only (Photon/Komoot geocoding, keyless, CORS-open)
+- [x] "From" field with autocomplete, defaults to GPS or last-used address
+- [x] "To" (destination) field, optional, also autocomplete
+- [x] GPS button still available, writes into the From field as "Current location" instead of raw coordinates
 
 ---
 
@@ -43,10 +49,10 @@ Transform transit-accessibility-planner into production iOS-first web app with r
 - [ ] Handle errors (permission denied, timeout, unavailable)
 - [ ] Show user location on map (blue dot)
 
-### 2.2 Auto-Populate Coordinates
+### 2.2 Auto-Populate Origin
 - [ ] On app load: Ask for location
-- [ ] Fill lat/lon fields from GPS
-- [ ] Auto-search on location grant (no button click needed)
+- [x] GPS success sets `window.origin` + labels the From field "Current location" (no raw lat/lon shown, per binding requirement)
+- [x] Auto-search on location grant (no button click needed)
 - [ ] Show "Locating..." state during fetch
 
 ### 2.3 Location Display
@@ -71,11 +77,14 @@ Transform transit-accessibility-planner into production iOS-first web app with r
 - [ ] Distance to stop (from user GPS)
 - [ ] Directions link (Apple Maps, Google Maps)
 
-### 3.3 Full Route Planning (Deferred — later phase)
+### 3.3 Accessible Route Finding — DONE (binding user spec, shipped 2026-09-01)
+- [x] Nearest confirmed-accessible stop to origin (`nearestAccessibleStop()` in app.js, no distance cap by design)
+- [x] Nearest confirmed-accessible stop to destination (same function)
+- [x] "Get directions on Google Maps" button — plain outbound deep link (`google.com/maps/dir/?api=1&origin=...&destination=...&travelmode=transit`, `target="_blank"`), no API key, no embedding. This is the user's own proposed design, approved and implemented as-is — supersedes the OTP2-self-host framing below as the accepted approach for v1.
 - [ ] Walking route to stop
 - [ ] Bus line info + schedule
 - [ ] Accessibility details (elevators, ramps, etc.)
-- [ ] Full accessible route-finding (origin → destination journey planning) — no free/keyless Lisbon-area transit routing API exists (confirmed via direct research). Requires self-hosting OpenTripPlanner 2 (~$5-10/mo VM, several dev-days merging GTFS feeds). Distinct scoped project, not a quick add.
+- [ ] Full in-app journey planning (turn-by-turn, multi-leg) — would still require self-hosting OpenTripPlanner 2 or similar; out of scope for v1, the Google Maps handoff covers the actual routing need.
 
 ---
 
@@ -168,10 +177,18 @@ Transform transit-accessibility-planner into production iOS-first web app with r
 
 ## Rejected / Out of Scope
 
-**Google Maps Platform integration** — rejected.
+**Google Maps Platform API integration (Directions/Geocoding APIs, embedded)** — still rejected.
 - Cost risk: free tier caps as low as 1,000–10,000 calls/mo depending on SKU; real overage pricing beyond that.
 - Unmitigable API key exposure on a static GitHub Pages site (no backend to guard it).
 - Google ToS forbids combining Directions/Geocoding content with a non-Google basemap — would force dropping Leaflet/OSM entirely.
+
+**What IS shipped instead**: a plain outbound link to `google.com/maps/dir/...` that opens Google Maps in a new tab. No API key, nothing embedded into the Leaflet map, so none of the three objections above apply. This is the user's own proposed design (2026-09-01) — see Phase 3.3.
+
+## Backlog (persistent — do not drop across sessions)
+
+- Mode-of-transport marker differentiation (bus/tram/metro/rail/ferry). Partial research done: ~52-name Metro station roster (Wikipedia), 9 ferry terminal names (WebSearch), CP rail roster incomplete. A substring name-heuristic was tried and explicitly rejected (false positives: "...ESTACIONA" matched as parking, bus stops near train stations mislabeled as rail) — do not resurrect that approach; needs real per-mode feed data or an explicit `mode` field from a joined source.
+- Full official roster of all 47 accessible Metro stations (currently only 15 of 47 confirmed by name from Metro de Lisboa's own site are in `stops.js`'s `ACCESSIBLE_METRO_STATIONS` overlay — extend if a complete official list surfaces, e.g. from Metro de Lisboa's accessibility page directly rather than news articles).
+- Pedrouços/Algés ferry terminal accessibility status unconfirmed (excluded from the overlay pending real data).
 
 ---
 
