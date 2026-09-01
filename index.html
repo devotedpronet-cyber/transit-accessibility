@@ -102,6 +102,130 @@
       padding: 8px;
     }
 
+    .lang-switcher {
+      position: relative;
+    }
+
+    .lang-trigger {
+      flex: none;
+      width: 44px;
+      height: 44px;
+      min-height: 0;
+      padding: 0;
+      border: none;
+      border-radius: 8px;
+      background: rgba(120, 120, 128, 0.12);
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .lang-trigger:active {
+      background: rgba(120, 120, 128, 0.2);
+    }
+
+    .lang-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      z-index: 30;
+      width: 220px;
+      max-height: 280px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.95);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      transform-origin: top right;
+      transform: scale(0.95);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 150ms ease-out, opacity 150ms ease-out;
+    }
+
+    .lang-dropdown.open {
+      transform: scale(1);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .lang-dropdown:focus {
+      outline: none;
+    }
+
+    .lang-option {
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-size: 17px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .lang-option:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 16px;
+      right: 0;
+      bottom: 0;
+      border-bottom: 0.5px solid rgba(60, 60, 67, 0.29);
+    }
+
+    .lang-option.selected {
+      background: rgba(0, 122, 255, 0.08);
+    }
+
+    .lang-option.focused {
+      outline: 2px solid var(--primary);
+      outline-offset: -2px;
+    }
+
+    .lang-flag {
+      flex: none;
+      font-size: 20px;
+      margin-right: 10px;
+    }
+
+    .lang-name {
+      flex: 1;
+      text-align: left;
+    }
+
+    .lang-check {
+      flex: none;
+      margin-left: 8px;
+      color: #007AFF;
+      font-size: 15px;
+      visibility: hidden;
+    }
+
+    .lang-option.selected .lang-check {
+      visibility: visible;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .lang-dropdown {
+        background: rgba(0, 0, 0, 0.85);
+      }
+
+      .lang-option.selected {
+        background: rgba(10, 132, 255, 0.16);
+      }
+
+      .lang-option:not(:last-child)::after {
+        border-bottom-color: rgba(84, 84, 88, 0.6);
+      }
+    }
+
     .input-group {
       margin-bottom: 16px;
     }
@@ -401,35 +525,39 @@
   <div class="bottom-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-      <h2>Find Stops</h2>
+      <h2 id="sheet-title">Find Stops</h2>
+      <div class="lang-switcher">
+        <button type="button" class="lang-trigger" id="lang-trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Change language, current: English">🇬🇧</button>
+        <div class="lang-dropdown" id="lang-dropdown" role="listbox" aria-label="Select language" tabindex="-1"></div>
+      </div>
     </div>
 
     <div class="input-group autocomplete">
-      <label>From</label>
+      <label id="from-label">From</label>
       <input type="text" id="origin-input" placeholder="Address, or use GPS" autocomplete="off">
       <div id="origin-suggestions" class="suggestions"></div>
     </div>
 
     <div class="input-group autocomplete">
-      <label>To (optional) — accessible stops near your destination</label>
+      <label id="to-label">To (optional) — accessible stops near your destination</label>
       <input type="text" id="dest-input" placeholder="Destination address" autocomplete="off">
       <div id="dest-suggestions" class="suggestions"></div>
     </div>
 
     <div class="button-group">
-      <button class="btn-primary" onclick="window.search()">Search</button>
+      <button class="btn-primary" id="search-btn" onclick="window.search()">Search</button>
     </div>
 
     <div id="dest-results-wrap"></div>
 
-    <p class="note">Only 15 metro stations + 9 ferry terminals have confirmed wheelchair access data city-wide. This app shows confirmed-accessible stops only — everything else is unconfirmed, not shown, to avoid implying access that isn't verified.</p>
+    <p class="note" id="note-text">Only 15 metro stations + 9 ferry terminals have confirmed wheelchair access data city-wide. This app shows confirmed-accessible stops only — everything else is unconfirmed, not shown, to avoid implying access that isn't verified.</p>
 
-    <a class="osm-link" href="https://www.openstreetmap.org/note/new" target="_blank" rel="noopener">Report accessibility on OpenStreetMap</a>
+    <a class="osm-link" id="osm-link" href="https://www.openstreetmap.org/note/new" target="_blank" rel="noopener">Report accessibility on OpenStreetMap</a>
   </div>
 
   <div class="center-pin" id="center-pin">📍</div>
   <button class="set-start-bar btn-primary" id="set-start-bar" type="button"></button>
-  <button class="gps-btn" id="gps-fab" title="Recenter on location">📍</button>
+  <button class="gps-btn" id="gps-fab" title="Recenter on location" aria-label="Recenter on location">📍</button>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script type="module">
@@ -438,6 +566,405 @@
 
     window.origin = null;
     window.destination = null;
+
+    // Escape untrusted text (geocoder/stop-name/GPS-error strings) before it
+    // goes into innerHTML — none of it is user-typed, but it's third-party
+    // API data, so treat it as untrusted rather than assume it's safe.
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str == null ? '' : String(str);
+      return div.innerHTML;
+    }
+
+    // ---- i18n -----------------------------------------------------------
+    // Only the app's own UI chrome (labels, buttons, static messages) is
+    // translated here. Stop names, place names, and anything coming from the
+    // live Carris API / stops.js overlay / Photon geocoding results are
+    // real-world data and are always left as-is, regardless of UI language.
+
+    const LANGUAGES = [
+      { code: 'en', flag: '🇬🇧', name: 'English' },
+      { code: 'pt-PT', flag: '🇵🇹', name: 'Português' },
+      { code: 'fr', flag: '🇫🇷', name: 'Français' },
+      { code: 'es', flag: '🇪🇸', name: 'Español' },
+      { code: 'de', flag: '🇩🇪', name: 'Deutsch' },
+      { code: 'pl', flag: '🇵🇱', name: 'Polski' },
+      { code: 'uk', flag: '🇺🇦', name: 'Українська' },
+    ];
+
+    const I18N = {
+      en: {
+        appTitle: "Find Stops",
+        fromLabel: "From",
+        originPlaceholder: "Address, or use GPS",
+        toLabel: "To (optional) — accessible stops near your destination",
+        destPlaceholder: "Destination address",
+        searchBtn: "Search",
+        noteText: "Only 15 metro stations + 9 ferry terminals have confirmed wheelchair access data city-wide. This app shows confirmed-accessible stops only — everything else is unconfirmed, not shown, to avoid implying access that isn't verified.",
+        osmLink: "Report accessibility on OpenStreetMap",
+        gpsFabTitle: "Recenter on location",
+        nearestStopsHeader: "Nearest accessible stops",
+        kmAwaySuffix: "{km} km away",
+        kmUnit: "km",
+        errEnterAddress: "Enter an address or use GPS",
+        errGpsDenied: "GPS permission denied. Enable location access in settings.",
+        errGpsTimeout: "GPS timeout. Try outdoors or enter coordinates manually.",
+        errGpsUnavailable: "GPS unavailable. Check device location settings.",
+        errGpsGeneric: "GPS error: {msg}",
+        setAsStart: "Set as start: {label}",
+        customLocationLabel: "Custom location",
+        badgeAccessible: "Wheelchair accessible",
+        badgeUnknown: "Accessibility unknown",
+        routeHeader: "Route",
+        routeNoStopsFound: "No confirmed-accessible stops found near one end — can't suggest an accessible route leg.",
+        routeViaAccessibleHeader: "Route via accessible stops",
+        routeNote: "No live Lisbon transit routing API exists (checked directly). This finds the nearest confirmed-accessible stop at each end and hands off to Google Maps for the actual transit directions between them.",
+        routeArrow: "↓ accessible stop to accessible stop ↓",
+        getDirectionsBtn: "Get directions on Google Maps",
+        routeNote2: "Opens the Google Maps app if installed — if so, tap Options and select \"Wheelchair accessible\" (the pre-selected filter only works in the browser).",
+        geocodeError: "Address search unavailable",
+        changeLanguageAriaLabel: "Change language, current: {name}",
+        selectLanguageLabel: "Select language",
+      },
+      'pt-PT': {
+        appTitle: "Encontrar Paragens",
+        fromLabel: "De",
+        originPlaceholder: "Morada, ou usar GPS",
+        toLabel: "Para (opcional) — paragens acessíveis perto do destino",
+        destPlaceholder: "Morada de destino",
+        searchBtn: "Pesquisar",
+        noteText: "Apenas 15 estações de metro + 9 terminais fluviais têm dados confirmados de acessibilidade a cadeira de rodas em toda a cidade. Esta aplicação mostra apenas paragens confirmadas como acessíveis — tudo o resto é não confirmado e não é apresentado, para evitar sugerir uma acessibilidade que não foi verificada.",
+        osmLink: "Reportar acessibilidade no OpenStreetMap",
+        gpsFabTitle: "Centrar na localização",
+        nearestStopsHeader: "Paragens acessíveis mais próximas",
+        kmAwaySuffix: "a {km} km",
+        kmUnit: "km",
+        errEnterAddress: "Introduza uma morada ou use o GPS",
+        errGpsDenied: "Permissão de GPS negada. Ative o acesso à localização nas definições.",
+        errGpsTimeout: "Tempo limite do GPS excedido. Tente ao ar livre ou introduza as coordenadas manualmente.",
+        errGpsUnavailable: "GPS indisponível. Verifique as definições de localização do dispositivo.",
+        errGpsGeneric: "Erro de GPS: {msg}",
+        setAsStart: "Definir como início: {label}",
+        customLocationLabel: "Localização personalizada",
+        badgeAccessible: "Acessível a cadeira de rodas",
+        badgeUnknown: "Acessibilidade desconhecida",
+        routeHeader: "Rota",
+        routeNoStopsFound: "Não foram encontradas paragens confirmadas como acessíveis perto de um dos pontos — não é possível sugerir um trajeto acessível.",
+        routeViaAccessibleHeader: "Rota via paragens acessíveis",
+        routeNote: "Não existe nenhuma API de rotas de transporte público em tempo real para Lisboa (verificado diretamente). Esta funcionalidade encontra a paragem confirmada como acessível mais próxima em cada ponto e remete para o Google Maps para as direções de transporte público reais entre elas.",
+        routeArrow: "↓ de paragem acessível a paragem acessível ↓",
+        getDirectionsBtn: "Obter direções no Google Maps",
+        routeNote2: "Abre a aplicação Google Maps, se instalada — se for o caso, toque em Opções e selecione \"Acessível a cadeira de rodas\" (o filtro pré-selecionado só funciona no navegador).",
+        geocodeError: "Pesquisa de moradas indisponível",
+        changeLanguageAriaLabel: "Mudar idioma, atual: {name}",
+        selectLanguageLabel: "Selecionar idioma",
+      },
+      fr: {
+        appTitle: "Trouver des arrêts",
+        fromLabel: "Départ",
+        originPlaceholder: "Adresse, ou utiliser le GPS",
+        toLabel: "Arrivée (optionnel) — arrêts accessibles près de votre destination",
+        destPlaceholder: "Adresse de destination",
+        searchBtn: "Rechercher",
+        noteText: "Seules 15 stations de métro et 9 terminaux fluviaux disposent de données confirmées d'accessibilité en fauteuil roulant à l'échelle de la ville. Cette application n'affiche que les arrêts confirmés accessibles — tout le reste n'est pas confirmé et n'est pas affiché, afin d'éviter de suggérer une accessibilité non vérifiée.",
+        osmLink: "Signaler l'accessibilité sur OpenStreetMap",
+        gpsFabTitle: "Recentrer sur la position",
+        nearestStopsHeader: "Arrêts accessibles les plus proches",
+        kmAwaySuffix: "à {km} km",
+        kmUnit: "km",
+        errEnterAddress: "Saisissez une adresse ou utilisez le GPS",
+        errGpsDenied: "Autorisation GPS refusée. Activez l'accès à la position dans les réglages.",
+        errGpsTimeout: "Délai GPS dépassé. Essayez en extérieur ou saisissez les coordonnées manuellement.",
+        errGpsUnavailable: "GPS indisponible. Vérifiez les réglages de localisation de l'appareil.",
+        errGpsGeneric: "Erreur GPS : {msg}",
+        setAsStart: "Définir comme départ : {label}",
+        customLocationLabel: "Position personnalisée",
+        badgeAccessible: "Accessible en fauteuil roulant",
+        badgeUnknown: "Accessibilité inconnue",
+        routeHeader: "Itinéraire",
+        routeNoStopsFound: "Aucun arrêt confirmé accessible trouvé près de l'une des extrémités — impossible de proposer un trajet accessible.",
+        routeViaAccessibleHeader: "Itinéraire via des arrêts accessibles",
+        routeNote: "Aucune API d'itinéraires de transport en commun en temps réel n'existe pour Lisbonne (vérifié directement). Cette fonction trouve l'arrêt confirmé accessible le plus proche à chaque extrémité et renvoie vers Google Maps pour les itinéraires de transport en commun réels entre eux.",
+        routeArrow: "↓ d'un arrêt accessible à un autre ↓",
+        getDirectionsBtn: "Obtenir l'itinéraire sur Google Maps",
+        routeNote2: "Ouvre l'application Google Maps si elle est installée — le cas échéant, appuyez sur Options et sélectionnez « Accessible en fauteuil roulant » (le filtre présélectionné ne fonctionne que dans le navigateur).",
+        geocodeError: "Recherche d'adresses indisponible",
+        changeLanguageAriaLabel: "Changer de langue, actuelle : {name}",
+        selectLanguageLabel: "Choisir la langue",
+      },
+      es: {
+        appTitle: "Buscar paradas",
+        fromLabel: "Origen",
+        originPlaceholder: "Dirección, o usar GPS",
+        toLabel: "Destino (opcional): paradas accesibles cerca de tu destino",
+        destPlaceholder: "Dirección de destino",
+        searchBtn: "Buscar",
+        noteText: "Solo 15 estaciones de metro y 9 terminales de ferry cuentan con datos confirmados de accesibilidad para sillas de ruedas en toda la ciudad. Esta aplicación solo muestra las paradas confirmadas como accesibles; todo lo demás no está confirmado y no se muestra, para evitar sugerir una accesibilidad no verificada.",
+        osmLink: "Reportar accesibilidad en OpenStreetMap",
+        gpsFabTitle: "Centrar en mi ubicación",
+        nearestStopsHeader: "Paradas accesibles más cercanas",
+        kmAwaySuffix: "a {km} km",
+        kmUnit: "km",
+        errEnterAddress: "Introduce una dirección o usa el GPS",
+        errGpsDenied: "Permiso de GPS denegado. Activa el acceso a la ubicación en los ajustes.",
+        errGpsTimeout: "Tiempo de espera del GPS agotado. Prueba al aire libre o introduce las coordenadas manualmente.",
+        errGpsUnavailable: "GPS no disponible. Comprueba los ajustes de ubicación del dispositivo.",
+        errGpsGeneric: "Error de GPS: {msg}",
+        setAsStart: "Establecer como origen: {label}",
+        customLocationLabel: "Ubicación personalizada",
+        badgeAccessible: "Accesible en silla de ruedas",
+        badgeUnknown: "Accesibilidad desconocida",
+        routeHeader: "Ruta",
+        routeNoStopsFound: "No se encontraron paradas confirmadas como accesibles cerca de uno de los extremos; no es posible sugerir una ruta accesible.",
+        routeViaAccessibleHeader: "Ruta a través de paradas accesibles",
+        routeNote: "No existe ninguna API de rutas de transporte público en tiempo real para Lisboa (verificado directamente). Esta función busca la parada confirmada como accesible más cercana en cada extremo y remite a Google Maps para las indicaciones de transporte público reales entre ambas.",
+        routeArrow: "↓ de parada accesible a parada accesible ↓",
+        getDirectionsBtn: "Obtener indicaciones en Google Maps",
+        routeNote2: "Abre la aplicación de Google Maps si está instalada; si es así, toca Opciones y selecciona «Accesible en silla de ruedas» (el filtro preseleccionado solo funciona en el navegador).",
+        geocodeError: "Búsqueda de direcciones no disponible",
+        changeLanguageAriaLabel: "Cambiar idioma, actual: {name}",
+        selectLanguageLabel: "Seleccionar idioma",
+      },
+      de: {
+        appTitle: "Haltestellen finden",
+        fromLabel: "Von",
+        originPlaceholder: "Adresse oder GPS verwenden",
+        toLabel: "Nach (optional) — barrierefreie Haltestellen nahe Ihrem Ziel",
+        destPlaceholder: "Zieladresse",
+        searchBtn: "Suchen",
+        noteText: "Nur 15 U-Bahn-Stationen und 9 Fährterminals verfügen stadtweit über bestätigte Daten zur Rollstuhlgerechtigkeit. Diese App zeigt ausschließlich bestätigt barrierefreie Haltestellen an — alles andere ist unbestätigt und wird nicht angezeigt, um keine ungeprüfte Barrierefreiheit zu suggerieren.",
+        osmLink: "Barrierefreiheit auf OpenStreetMap melden",
+        gpsFabTitle: "Auf Standort zentrieren",
+        nearestStopsHeader: "Nächstgelegene barrierefreie Haltestellen",
+        kmAwaySuffix: "{km} km entfernt",
+        kmUnit: "km",
+        errEnterAddress: "Adresse eingeben oder GPS verwenden",
+        errGpsDenied: "GPS-Berechtigung verweigert. Aktivieren Sie den Standortzugriff in den Einstellungen.",
+        errGpsTimeout: "GPS-Zeitüberschreitung. Versuchen Sie es im Freien oder geben Sie die Koordinaten manuell ein.",
+        errGpsUnavailable: "GPS nicht verfügbar. Überprüfen Sie die Standorteinstellungen des Geräts.",
+        errGpsGeneric: "GPS-Fehler: {msg}",
+        setAsStart: "Als Start festlegen: {label}",
+        customLocationLabel: "Benutzerdefinierter Standort",
+        badgeAccessible: "Rollstuhlgerecht",
+        badgeUnknown: "Barrierefreiheit unbekannt",
+        routeHeader: "Route",
+        routeNoStopsFound: "In der Nähe eines der beiden Punkte wurden keine bestätigt barrierefreien Haltestellen gefunden — keine barrierefreie Route möglich.",
+        routeViaAccessibleHeader: "Route über barrierefreie Haltestellen",
+        routeNote: "Für Lissabon gibt es keine Live-API für den öffentlichen Nahverkehr (direkt geprüft). Diese Funktion findet an jedem Ende die nächstgelegene bestätigt barrierefreie Haltestelle und leitet für die eigentliche Wegbeschreibung im öffentlichen Nahverkehr an Google Maps weiter.",
+        routeArrow: "↓ von barrierefreier Haltestelle zu barrierefreier Haltestelle ↓",
+        getDirectionsBtn: "Route in Google Maps öffnen",
+        routeNote2: "Öffnet die Google-Maps-App, falls installiert — tippen Sie dort auf Optionen und wählen Sie „Rollstuhlgerecht\" (der vorausgewählte Filter funktioniert nur im Browser).",
+        geocodeError: "Adresssuche nicht verfügbar",
+        changeLanguageAriaLabel: "Sprache ändern, aktuell: {name}",
+        selectLanguageLabel: "Sprache auswählen",
+      },
+      pl: {
+        appTitle: "Znajdź przystanki",
+        fromLabel: "Skąd",
+        originPlaceholder: "Adres lub użyj GPS",
+        toLabel: "Dokąd (opcjonalnie) — dostępne przystanki blisko celu",
+        destPlaceholder: "Adres docelowy",
+        searchBtn: "Szukaj",
+        noteText: "Tylko 15 stacji metra i 9 terminali promowych ma potwierdzone dane o dostępności dla wózków inwalidzkich w całym mieście. Ta aplikacja pokazuje wyłącznie przystanki potwierdzone jako dostępne — wszystko inne jest niepotwierdzone i nie jest wyświetlane, aby nie sugerować dostępności, która nie została zweryfikowana.",
+        osmLink: "Zgłoś dostępność w OpenStreetMap",
+        gpsFabTitle: "Wyśrodkuj na lokalizacji",
+        nearestStopsHeader: "Najbliższe dostępne przystanki",
+        kmAwaySuffix: "{km} km stąd",
+        kmUnit: "km",
+        errEnterAddress: "Wpisz adres lub użyj GPS",
+        errGpsDenied: "Odmówiono uprawnień GPS. Włącz dostęp do lokalizacji w ustawieniach.",
+        errGpsTimeout: "Przekroczono czas oczekiwania GPS. Spróbuj na zewnątrz lub wpisz współrzędne ręcznie.",
+        errGpsUnavailable: "GPS niedostępny. Sprawdź ustawienia lokalizacji urządzenia.",
+        errGpsGeneric: "Błąd GPS: {msg}",
+        setAsStart: "Ustaw jako start: {label}",
+        customLocationLabel: "Własna lokalizacja",
+        badgeAccessible: "Dostępny dla wózków inwalidzkich",
+        badgeUnknown: "Dostępność nieznana",
+        routeHeader: "Trasa",
+        routeNoStopsFound: "Nie znaleziono potwierdzonych dostępnych przystanków w pobliżu jednego z punktów — nie można zaproponować dostępnej trasy.",
+        routeViaAccessibleHeader: "Trasa przez dostępne przystanki",
+        routeNote: "Dla Lizbony nie istnieje żadne aktywne API tras transportu publicznego (sprawdzono bezpośrednio). Ta funkcja znajduje najbliższy potwierdzony dostępny przystanek przy każdym z punktów i przekierowuje do Google Maps po rzeczywiste wskazówki dojazdu transportem publicznym między nimi.",
+        routeArrow: "↓ z dostępnego przystanku do dostępnego przystanku ↓",
+        getDirectionsBtn: "Uzyskaj wskazówki dojazdu w Google Maps",
+        routeNote2: "Otwiera aplikację Google Maps, jeśli jest zainstalowana — jeśli tak, dotknij Opcje i wybierz „Dostępny dla wózków inwalidzkich” (wstępnie wybrany filtr działa tylko w przeglądarce).",
+        geocodeError: "Wyszukiwanie adresów niedostępne",
+        changeLanguageAriaLabel: "Zmień język, obecny: {name}",
+        selectLanguageLabel: "Wybierz język",
+      },
+      uk: {
+        appTitle: "Знайти зупинки",
+        fromLabel: "Звідки",
+        originPlaceholder: "Адреса або використати GPS",
+        toLabel: "Куди (необов'язково) — доступні зупинки біля місця призначення",
+        destPlaceholder: "Адреса призначення",
+        searchBtn: "Пошук",
+        noteText: "Лише 15 станцій метро та 9 паромних терміналів мають підтверджені дані про доступність для інвалідних візків у межах міста. Цей застосунок показує лише підтверджено доступні зупинки — все інше не підтверджено і не відображається, щоб не натякати на доступність, яку не перевірено.",
+        osmLink: "Повідомити про доступність на OpenStreetMap",
+        gpsFabTitle: "Центрувати на моєму місцезнаходженні",
+        nearestStopsHeader: "Найближчі доступні зупинки",
+        kmAwaySuffix: "за {km} км",
+        kmUnit: "км",
+        errEnterAddress: "Введіть адресу або скористайтеся GPS",
+        errGpsDenied: "Доступ до GPS заборонено. Увімкніть доступ до місцезнаходження в налаштуваннях.",
+        errGpsTimeout: "Тайм-аут GPS. Спробуйте на відкритому повітрі або введіть координати вручну.",
+        errGpsUnavailable: "GPS недоступний. Перевірте налаштування місцезнаходження пристрою.",
+        errGpsGeneric: "Помилка GPS: {msg}",
+        setAsStart: "Встановити як початок: {label}",
+        customLocationLabel: "Довільне місцезнаходження",
+        badgeAccessible: "Доступний для інвалідних візків",
+        badgeUnknown: "Доступність невідома",
+        routeHeader: "Маршрут",
+        routeNoStopsFound: "Поблизу одного з пунктів не знайдено підтверджено доступних зупинок — неможливо запропонувати доступний маршрут.",
+        routeViaAccessibleHeader: "Маршрут через доступні зупинки",
+        routeNote: "Для Лісабона немає жодного діючого API маршрутів громадського транспорту (перевірено безпосередньо). Ця функція знаходить найближчу підтверджено доступну зупинку на кожному кінці та передає посилання на Google Maps для реальних маршрутів громадського транспорту між ними.",
+        routeArrow: "↓ від доступної зупинки до доступної зупинки ↓",
+        getDirectionsBtn: "Отримати маршрут у Google Maps",
+        routeNote2: "Відкриває застосунок Google Maps, якщо він встановлений — якщо так, натисніть «Опції» та виберіть «Доступний для інвалідних візків» (попередньо вибраний фільтр працює лише в браузері).",
+        geocodeError: "Пошук адрес недоступний",
+        changeLanguageAriaLabel: "Змінити мову, поточна: {name}",
+        selectLanguageLabel: "Виберіть мову",
+      },
+    };
+
+    let currentLang = 'en';
+    let langDropdownOpen = false;
+    let langActiveIndex = 0;
+
+    function detectLanguage() {
+      const stored = localStorage.getItem('lisbonTransit.lang');
+      if (stored && I18N[stored]) return stored;
+      const nav = (navigator.language || '').toLowerCase();
+      const match = LANGUAGES.find((l) => nav.startsWith(l.code.toLowerCase().split('-')[0]));
+      return match ? match.code : 'en';
+    }
+
+    function applyLanguage(code) {
+      if (!I18N[code]) code = 'en';
+      currentLang = code;
+      localStorage.setItem('lisbonTransit.lang', code);
+
+      const t = I18N[code];
+      document.getElementById('sheet-title').textContent = t.appTitle;
+      document.getElementById('from-label').textContent = t.fromLabel;
+      document.getElementById('origin-input').placeholder = t.originPlaceholder;
+      document.getElementById('to-label').textContent = t.toLabel;
+      document.getElementById('dest-input').placeholder = t.destPlaceholder;
+      document.getElementById('search-btn').textContent = t.searchBtn;
+      document.getElementById('note-text').textContent = t.noteText;
+      document.getElementById('osm-link').textContent = t.osmLink;
+
+      const gpsFab = document.getElementById('gps-fab');
+      gpsFab.title = t.gpsFabTitle;
+      gpsFab.setAttribute('aria-label', t.gpsFabTitle);
+
+      const lang = LANGUAGES.find((l) => l.code === code) || LANGUAGES[0];
+      const trigger = document.getElementById('lang-trigger');
+      trigger.textContent = lang.flag;
+      trigger.setAttribute('aria-label', t.changeLanguageAriaLabel.replace('{name}', lang.name));
+      document.getElementById('lang-dropdown').setAttribute('aria-label', t.selectLanguageLabel);
+
+      renderLangOptions();
+
+      // Re-render any already-displayed dynamic content (badges, route text,
+      // error messages) so it reflects the new language immediately.
+      if (window.search) window.search();
+    }
+
+    function renderLangOptions() {
+      const dropdown = document.getElementById('lang-dropdown');
+      dropdown.innerHTML = LANGUAGES.map((l, i) => {
+        const selected = l.code === currentLang;
+        return `
+          <div class="lang-option${selected ? ' selected' : ''}" role="option" id="lang-opt-${i}" aria-selected="${selected}" data-code="${l.code}">
+            <span class="lang-flag">${l.flag}</span><span class="lang-name">${l.name}</span><span class="lang-check">✓</span>
+          </div>
+        `;
+      }).join('');
+
+      dropdown.querySelectorAll('.lang-option').forEach((el) => {
+        el.addEventListener('click', () => {
+          applyLanguage(el.dataset.code);
+          closeLangDropdown();
+        });
+      });
+
+      langActiveIndex = LANGUAGES.findIndex((l) => l.code === currentLang);
+      if (langActiveIndex < 0) langActiveIndex = 0;
+    }
+
+    function updateLangActiveDescendant() {
+      const dropdown = document.getElementById('lang-dropdown');
+      dropdown.setAttribute('aria-activedescendant', `lang-opt-${langActiveIndex}`);
+      dropdown.querySelectorAll('.lang-option').forEach((el, i) => {
+        el.classList.toggle('focused', i === langActiveIndex);
+      });
+    }
+
+    function openLangDropdown() {
+      const trigger = document.getElementById('lang-trigger');
+      const dropdown = document.getElementById('lang-dropdown');
+      langDropdownOpen = true;
+      dropdown.classList.add('open');
+      trigger.setAttribute('aria-expanded', 'true');
+      langActiveIndex = LANGUAGES.findIndex((l) => l.code === currentLang);
+      if (langActiveIndex < 0) langActiveIndex = 0;
+      updateLangActiveDescendant();
+      dropdown.focus();
+      document.addEventListener('click', onDocumentClickCloseLang);
+    }
+
+    function closeLangDropdown(opts) {
+      const refocusTrigger = opts && opts.refocusTrigger;
+      const trigger = document.getElementById('lang-trigger');
+      const dropdown = document.getElementById('lang-dropdown');
+      langDropdownOpen = false;
+      dropdown.classList.remove('open');
+      trigger.setAttribute('aria-expanded', 'false');
+      dropdown.removeAttribute('aria-activedescendant');
+      document.removeEventListener('click', onDocumentClickCloseLang);
+      if (refocusTrigger) trigger.focus();
+    }
+
+    function onDocumentClickCloseLang(e) {
+      const wrap = document.querySelector('.lang-switcher');
+      if (wrap && !wrap.contains(e.target)) {
+        closeLangDropdown();
+      }
+    }
+
+    function onLangDropdownKeydown(e) {
+      if (!langDropdownOpen) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        langActiveIndex = (langActiveIndex + 1) % LANGUAGES.length;
+        updateLangActiveDescendant();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        langActiveIndex = (langActiveIndex - 1 + LANGUAGES.length) % LANGUAGES.length;
+        updateLangActiveDescendant();
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        applyLanguage(LANGUAGES[langActiveIndex].code);
+        closeLangDropdown();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeLangDropdown({ refocusTrigger: true });
+      }
+    }
+
+    function setupLangSwitcher() {
+      const trigger = document.getElementById('lang-trigger');
+      const dropdown = document.getElementById('lang-dropdown');
+
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (langDropdownOpen) closeLangDropdown(); else openLangDropdown();
+      });
+
+      dropdown.addEventListener('keydown', onLangDropdownKeydown);
+    }
+
+    // ---- end i18n ---------------------------------------------------------
 
     window.addEventListener('DOMContentLoaded', async () => {
       await initMap('map');
@@ -458,8 +985,9 @@
         window.search();
       });
       document.getElementById('origin-input').addEventListener('focus', showNearestStopsInOriginDropdown);
+      setupLangSwitcher();
       loadDefaults();
-      window.search();
+      applyLanguage(detectLanguage());
     });
 
     // Photon (Komoot) — CORS-open, keyless, unlike Nominatim which forbids
@@ -468,7 +996,7 @@
       if (!query || query.trim().length < 3) return [];
       const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&lat=38.7223&lon=-9.1393&zoom=12&limit=5`;
       const res = await fetch(url);
-      if (!res.ok) throw new Error('Address search unavailable');
+      if (!res.ok) throw new Error(I18N[currentLang].geocodeError);
       const data = await res.json();
       return data.features.map((f) => {
         const p = f.properties;
@@ -489,7 +1017,7 @@
           try {
             const places = await geocode(query);
             box.innerHTML = places
-              .map((p, i) => `<div class="suggestion-item" data-i="${i}">${p.label}</div>`)
+              .map((p, i) => `<div class="suggestion-item" data-i="${i}">${escapeHtml(p.label)}</div>`)
               .join('');
             box.querySelectorAll('.suggestion-item').forEach((el) => {
               el.addEventListener('click', () => {
@@ -517,8 +1045,9 @@
       const stops = getStops().filter(s => s.accessibility === 'known-accessible');
       const nearest = findNearestStops(stops, window.origin.lat, window.origin.lon, 50, false).slice(0, 5);
       if (nearest.length === 0) return;
-      box.innerHTML = '<div class="suggestions-header">Nearest accessible stops</div>' +
-        nearest.map((s, i) => `<div class="suggestion-item" data-stop-i="${i}">${s.name}<span class="suggestion-distance">${s.distance.toFixed(1)} km</span></div>`).join('');
+      const t = I18N[currentLang];
+      box.innerHTML = `<div class="suggestions-header">${escapeHtml(t.nearestStopsHeader)}</div>` +
+        nearest.map((s, i) => `<div class="suggestion-item" data-stop-i="${i}">${escapeHtml(s.name)}<span class="suggestion-distance">${s.distance.toFixed(1)} ${escapeHtml(t.kmUnit)}</span></div>`).join('');
       box.querySelectorAll('[data-stop-i]').forEach((el) => {
         el.addEventListener('click', () => {
           const stop = nearest[Number(el.dataset.stopI)];
@@ -616,14 +1145,15 @@
         (error) => {
           gpsFab.disabled = false;
 
+          const t = I18N[currentLang];
           if (error.code === error.PERMISSION_DENIED) {
-            resultsDiv.innerHTML = '<div class="error">GPS permission denied. Enable location access in settings.</div>';
+            resultsDiv.innerHTML = `<div class="error">${t.errGpsDenied}</div>`;
           } else if (error.code === error.TIMEOUT) {
-            resultsDiv.innerHTML = '<div class="error">GPS timeout. Try outdoors or enter coordinates manually.</div>';
+            resultsDiv.innerHTML = `<div class="error">${t.errGpsTimeout}</div>`;
           } else if (error.code === error.POSITION_UNAVAILABLE) {
-            resultsDiv.innerHTML = '<div class="error">GPS unavailable. Check device location settings.</div>';
+            resultsDiv.innerHTML = `<div class="error">${t.errGpsUnavailable}</div>`;
           } else {
-            resultsDiv.innerHTML = '<div class="error">GPS error: ' + error.message + '</div>';
+            resultsDiv.innerHTML = `<div class="error">${escapeHtml(t.errGpsGeneric.replace('{msg}', error.message))}</div>`;
           }
         },
         { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
@@ -695,8 +1225,9 @@
         const center = window.map.getCenter();
         const lat = center.lat;
         const lon = center.lng;
-        mapPinCandidate = { lat, lon, label: 'Custom location' };
-        bar.textContent = 'Set as start: Custom location';
+        const t = I18N[currentLang];
+        mapPinCandidate = { lat, lon, label: t.customLocationLabel };
+        bar.textContent = t.setAsStart.replace('{label}', t.customLocationLabel);
         bar.classList.add('active');
         try {
           const res = await fetch(`https://photon.komoot.io/reverse?lon=${lon}&lat=${lat}`);
@@ -708,7 +1239,7 @@
               const stillCurrent = mapPinCandidate && mapPinCandidate.lat === lat && mapPinCandidate.lon === lon;
               if (label && stillCurrent) {
                 mapPinCandidate.label = label;
-                bar.textContent = `Set as start: ${label}`;
+                bar.textContent = I18N[currentLang].setAsStart.replace('{label}', label);
               }
             }
           }
@@ -745,14 +1276,15 @@
     }
 
     function renderStopCard(stop) {
+      const t = I18N[currentLang];
       const accessible = stop.accessibility === 'known-accessible';
       const badgeClass = accessible ? 'badge-accessible' : 'badge-unknown';
-      const badgeText = accessible ? 'Wheelchair accessible' : 'Accessibility unknown';
-      const lines = stop.lines ? `<div class="stop-lines">${stop.lines}</div>` : '';
+      const badgeText = accessible ? t.badgeAccessible : t.badgeUnknown;
+      const lines = stop.lines ? `<div class="stop-lines">${escapeHtml(stop.lines)}</div>` : '';
       return `
         <div class="stop">
-          <div class="stop-name">${stop.name}</div>
-          <div class="stop-distance">${stop.distance.toFixed(2)} km away</div>
+          <div class="stop-name">${escapeHtml(stop.name)}</div>
+          <div class="stop-distance">${t.kmAwaySuffix.replace('{km}', stop.distance.toFixed(2))}</div>
           <div class="stop-badge ${badgeClass}">${badgeText}</div>
           ${lines}
         </div>
@@ -771,9 +1303,10 @@
       if (navigator.vibrate) navigator.vibrate(10);
       const destWrap = document.getElementById('dest-results-wrap');
       destWrap.innerHTML = '';
+      const t = I18N[currentLang];
 
       if (!window.origin) {
-        document.getElementById('origin-suggestions').innerHTML = '<div class="error">Enter an address or use GPS</div>';
+        document.getElementById('origin-suggestions').innerHTML = `<div class="error">${t.errEnterAddress}</div>`;
         return;
       }
 
@@ -791,16 +1324,16 @@
           const destStop = nearestAccessibleStop(stops, window.destination.lat, window.destination.lon);
 
           if (!originStop || !destStop) {
-            destWrap.innerHTML = '<div class="dest-results-header">Route</div><div class="empty">No confirmed-accessible stops found near one end — can\'t suggest an accessible route leg.</div>';
+            destWrap.innerHTML = `<div class="dest-results-header">${t.routeHeader}</div><div class="empty">${t.routeNoStopsFound}</div>`;
           } else {
             destWrap.innerHTML = `
-              <div class="dest-results-header">Route via accessible stops</div>
-              <p class="route-note">No live Lisbon transit routing API exists (checked directly). This finds the nearest confirmed-accessible stop at each end and hands off to Google Maps for the actual transit directions between them.</p>
+              <div class="dest-results-header">${t.routeViaAccessibleHeader}</div>
+              <p class="route-note">${t.routeNote}</p>
               ${renderStopCard(originStop)}
-              <div style="text-align:center;padding:4px 0;color:var(--text-secondary);font-size:13px;">↓ accessible stop to accessible stop ↓</div>
+              <div style="text-align:center;padding:4px 0;color:var(--text-secondary);font-size:13px;">${t.routeArrow}</div>
               ${renderStopCard(destStop)}
-              <a class="btn-primary" style="display:block;text-align:center;text-decoration:none;padding:12px;border-radius:8px;margin-top:8px;" href="${googleDirectionsUrl(originStop, destStop)}" target="_blank" rel="noopener">Get directions on Google Maps</a>
-              <p class="route-note" style="margin-top:4px;">Opens the Google Maps app if installed — if so, tap Options and select "Wheelchair accessible" (the pre-selected filter only works in the browser).</p>
+              <a class="btn-primary" style="display:block;text-align:center;text-decoration:none;padding:12px;border-radius:8px;margin-top:8px;" href="${googleDirectionsUrl(originStop, destStop)}" target="_blank" rel="noopener">${t.getDirectionsBtn}</a>
+              <p class="route-note" style="margin-top:4px;">${t.routeNote2}</p>
             `;
           }
         }
