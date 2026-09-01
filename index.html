@@ -585,7 +585,11 @@
     }
 
     function googleDirectionsUrl(a, b) {
-      return `https://www.google.com/maps/dir/?api=1&origin=${a.lat},${a.lon}&destination=${b.lat},${b.lon}&travelmode=transit`;
+      // Undocumented path-based format — data=!3m1!4b1!4m4!4m3!2m1!4e4!3e3 forces
+      // "Wheelchair accessible" transit routing pre-selected. Reverse-engineered
+      // from user-captured before/after URLs (2026-09-01); no public API param
+      // exists for this. Could break if Google changes the internal encoding.
+      return `https://www.google.com/maps/dir/${a.lat},${a.lon}/${b.lat},${b.lon}/data=!3m1!4b1!4m4!4m3!2m1!4e4!3e3`;
     }
 
     window.search = function() {

@@ -80,7 +80,7 @@ Transform transit-accessibility-planner into production iOS-first web app with r
 ### 3.3 Accessible Route Finding — DONE (binding user spec, shipped 2026-09-01)
 - [x] Nearest confirmed-accessible stop to origin (`nearestAccessibleStop()` in app.js, no distance cap by design)
 - [x] Nearest confirmed-accessible stop to destination (same function)
-- [x] "Get directions on Google Maps" button — plain outbound deep link (`google.com/maps/dir/?api=1&origin=...&destination=...&travelmode=transit`, `target="_blank"`), no API key, no embedding. This is the user's own proposed design, approved and implemented as-is — supersedes the OTP2-self-host framing below as the accepted approach for v1.
+- [x] "Get directions on Google Maps" button — plain outbound deep link, `target="_blank"`, no API key, no embedding. Uses undocumented path-based URL format (`google.com/maps/dir/<lat1>,<lon1>/<lat2>,<lon2>/data=!3m1!4b1!4m4!4m3!2m1!4e4!3e3`) that force-preselects "Wheelchair accessible" transit routing — reverse-engineered from user-captured before/after URLs (2026-09-01), no public API param exists for this. This is the user's own proposed design, approved and implemented as-is — supersedes the OTP2-self-host framing below as the accepted approach for v1.
 - [ ] Walking route to stop
 - [ ] Bus line info + schedule
 - [ ] Accessibility details (elevators, ramps, etc.)
