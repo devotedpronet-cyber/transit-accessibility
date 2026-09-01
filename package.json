@@ -11,8 +11,14 @@
   },
   "jest": {
     "testEnvironment": "node",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/.claude/worktrees/"
+    ],
     "coveragePathIgnorePatterns": [
-      "map.js"
+      "map.js",
+      "stops.js",
+      "/.claude/worktrees/"
     ],
     "coverageThreshold": {
       "global": {

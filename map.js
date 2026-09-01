@@ -1,7 +1,8 @@
-// Lisbon Transit Accessibility Map
-// Shows wheelchair-accessible bus stops with real GTFS data
+// Lisbon-region transit map. Stop data comes from stops.js (real Carris
+// Metropolitana API, honest accessibility labeling — see stops.js header).
 
-import { loadAccessibleStops } from './gtfs.js';
+import { loadStops } from './stops.js';
+import { colorForAccessibility, labelForAccessibility } from './mapColors.js';
 
 let map;
 let markers = [];
@@ -12,51 +13,37 @@ async function initMap(mapId) {
   window.map = map;
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap, Carris data',
+    attribution: '© OpenStreetMap contributors, Carris Metropolitana',
     maxZoom: 19,
   }).addTo(map);
 
-  // Load real GTFS data
-  stops = await loadAccessibleStops();
+  stops = await loadStops();
   renderStops();
 }
 
 function renderStops() {
-  // Clear existing markers
   markers.forEach(m => map.removeLayer(m));
   markers = [];
 
-  // Accessibility rating: wheelchair + elevator = green
   stops.forEach(stop => {
-    const rating = (stop.wheelchair ? 2 : 0) + (stop.elevator ? 3 : 0);
-    const color = rating >= 4 ? '#34C759' : rating >= 2 ? '#FF9500' : '#FF3B30';
-
     const marker = L.circleMarker([stop.lat, stop.lon], {
-      radius: 8,
-      fillColor: color,
+      radius: 6,
+      fillColor: colorForAccessibility(stop.accessibility),
       color: '#fff',
-      weight: 2,
+      weight: 1.5,
       opacity: 1,
       fillOpacity: 0.85,
     }).addTo(map);
 
-    const lines = stop.lines ? `<br/>Lines: ${stop.lines}` : '';
+    const lines = stop.lines ? `<br/><small>Lines: ${stop.lines}</small>` : '';
     marker.bindPopup(`
       <b>${stop.name}</b><br/>
-      <small>Wheelchair: ${stop.wheelchair ? '✓' : '✗'}</small><br/>
-      <small>Elevator: ${stop.elevator ? '✓' : '✗'}</small>${lines}
+      <small>${labelForAccessibility(stop.accessibility)}</small>${lines}
     `);
 
     markers.push(marker);
   });
 }
 
-function filterByAccessibility(wheelchairOnly) {
-  // Real GTFS data already filtered by accessibility
-  // This is preserved for compatibility
-  renderStops();
-}
-
-export { initMap, renderStops, filterByAccessibility };
-export const mockStops = [];
+export { initMap, renderStops };
 export const getStops = () => stops;

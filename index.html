@@ -171,7 +171,7 @@
       background: var(--bg);
       padding: 12px;
       margin-bottom: 12px;
-      border-left: 4px solid var(--secondary);
+      border-left: 4px solid var(--border);
       border-radius: 8px;
       cursor: pointer;
       -webkit-user-select: none;
@@ -197,6 +197,25 @@
       font-size: 13px;
       color: var(--primary);
       margin-top: 4px;
+    }
+
+    .stop-badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-top: 4px;
+    }
+
+    .badge-accessible {
+      background: rgba(52, 199, 89, 0.15);
+      color: #248A3D;
+    }
+
+    .badge-unknown {
+      background: rgba(142, 142, 147, 0.15);
+      color: var(--text-secondary);
     }
 
     .error {
@@ -288,8 +307,8 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script type="module">
-    import { findNearestStepFreeStops } from "./app.js";
-    import { initMap } from "./map.js";
+    import { findNearestStops } from "./app.js";
+    import { initMap, getStops } from "./map.js";
 
     window.addEventListener('DOMContentLoaded', async () => {
       await initMap('map');
@@ -403,20 +422,27 @@
       localStorage.setItem('lastLon', lon);
 
       try {
-        const stops = findNearestStepFreeStops(lat, lon);
+        const stops = findNearestStops(getStops(), lat, lon);
         if (stops.length === 0) {
-          resultsDiv.innerHTML = '<div class="empty">No accessible stops within 2km</div>';
+          resultsDiv.innerHTML = '<div class="empty">No stops within 2km</div>';
           return;
         }
 
         resultsDiv.innerHTML = stops
-          .map((stop) => `
+          .map((stop) => {
+            const accessible = stop.accessibility === 'known-accessible';
+            const badgeClass = accessible ? 'badge-accessible' : 'badge-unknown';
+            const badgeText = accessible ? 'Wheelchair accessible' : 'Accessibility unknown';
+            const lines = stop.lines ? `<div class="stop-lines">${stop.lines}</div>` : '';
+            return `
             <div class="stop">
               <div class="stop-name">${stop.name}</div>
               <div class="stop-distance">${stop.distance.toFixed(2)} km away</div>
-              <div class="stop-lines">${stop.line}</div>
+              <div class="stop-badge ${badgeClass}">${badgeText}</div>
+              ${lines}
             </div>
-          `)
+          `;
+          })
           .join('');
       } catch (error) {
         resultsDiv.innerHTML = `<div class="error">${error.message}</div>`;

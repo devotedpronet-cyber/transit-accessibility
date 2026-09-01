@@ -1,12 +1,10 @@
-// Mock Lisbon bus stops with accessibility info
-export const mockStops = [
-  { id: 1, name: "Rossio", lat: 38.7136, lon: -9.1399, stepFree: true, line: "1,2,3,91" },
-  { id: 2, name: "Baixa-Chiado", lat: 38.7076, lon: -9.1422, stepFree: true, line: "28" },
-  { id: 3, name: "Terreiro do Paço", lat: 38.7072, lon: -9.1310, stepFree: true, line: "15,25" },
-  { id: 4, name: "Belém", lat: 38.6617, lon: -9.2040, stepFree: false, line: "14,28" },
-  { id: 5, name: "Oriente", lat: 38.7674, lon: -9.0948, stepFree: true, line: "5,10,12" },
-  { id: 6, name: "Príncipe Real", lat: 38.7161, lon: -9.1407, stepFree: false, line: "9,758" },
-];
+// Distance + nearby-stop logic. Stop data itself lives in stops.js.
+// NOTE: real GTFS data for the Lisbon area does not carry reliable
+// stop-level wheelchair/step-free info (see stops.js header). We therefore
+// no longer filter to "step-free only" — that would silently drop 12,700+
+// of 12,752 stops city-wide. Instead every stop carries an honest
+// accessibility label ('known-accessible' | 'unknown') and callers decide
+// how to present that.
 
 export function getDistance(lat1, lon1, lat2, lon2) {
   const toRad = (deg) => (deg * Math.PI) / 180;
@@ -20,16 +18,18 @@ export function getDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-export function findNearestStepFreeStops(userLat, userLon, maxDistance = 2) {
+export function findNearestStops(stops, userLat, userLon, maxDistance = 2) {
   if (typeof userLat !== "number" || typeof userLon !== "number") {
     throw new Error("Invalid coordinates");
   }
   if (userLat < -90 || userLat > 90 || userLon < -180 || userLon > 180) {
     throw new Error("Coordinates out of range");
   }
+  if (!Array.isArray(stops)) {
+    throw new Error("Stops must be an array");
+  }
 
-  return mockStops
-    .filter((stop) => stop.stepFree)
+  return stops
     .map((stop) => ({
       ...stop,
       distance: getDistance(userLat, userLon, stop.lat, stop.lon),
@@ -40,9 +40,13 @@ export function findNearestStepFreeStops(userLat, userLon, maxDistance = 2) {
 
 export function formatResults(stops) {
   if (!stops || stops.length === 0) {
-    return "No accessible stops found within 2km.";
+    return "No stops found within 2km.";
   }
   return stops
-    .map((stop) => `${stop.name} (${stop.distance.toFixed(2)}km) - Lines: ${stop.line}`)
+    .map((stop) => {
+      const badge = stop.accessibility === 'known-accessible' ? 'Accessible' : 'Accessibility unknown';
+      const lines = stop.lines ? ` - Lines: ${stop.lines}` : '';
+      return `${stop.name} (${stop.distance.toFixed(2)}km) - ${badge}${lines}`;
+    })
     .join("\n");
 }
