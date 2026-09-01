@@ -26,6 +26,12 @@ Transform transit-accessibility-planner into production iOS-first web app with r
 - [ ] Desktop: Current two-column layout
 - [ ] Touch-friendly spacing everywhere
 
+### 1.4 Accessibility & Data UX (not started)
+- [ ] "Accessible-first" sort toggle in search results (default on; sorts known-accessible stops first without hiding others)
+- [ ] Persistent "you are here" map marker (distinct from the temporary GPS accuracy circle)
+- [ ] Mode-of-transport marker differentiation (bus/tram/metro/rail/ferry)
+- [ ] OSM Notes-based accessibility crowdsourcing report link
+
 ---
 
 ## Phase 2: Real GPS Integration (Day 2)
@@ -53,22 +59,23 @@ Transform transit-accessibility-planner into production iOS-first web app with r
 
 ## Phase 3: Real Lisbon Transit Data (Day 3)
 
-### 3.1 GTFS Integration
-- [ ] Fetch Lisbon Carris/Metro GTFS from dados.gov.pt
-- [ ] Parse stops.txt (id, name, lat, lon, wheelchair_boarding)
-- [ ] Filter by wheelchair_boarding = 1
-- [ ] Replace mockStops with real data (~300+ stops)
+### 3.1 Real Stop Data Integration ✅ DONE
+- [x] Fetch live stops from Carris Metropolitana API (`https://api.carrismetropolitana.pt/v2/stops`, keyless, CORS-open, 12,752 stops)
+- [x] Replace `mockStops` array with live fetch — no static GTFS parse needed
+- [x] Honest-uncertainty accessibility model: `accessibility: 'known-accessible' | 'unknown'` (no fabricated `stepFree` boolean)
+- [x] Removed `findNearestStepFreeStops()` — superseded by live data + `accessibility` field
 
 ### 3.2 Stop Rendering
-- [ ] Color code: green (wheelchair), yellow (partial), red (none)
+- [ ] Color code: known-accessible vs unknown (no false "not accessible" claims)
 - [ ] Show stop name + line numbers on tap
 - [ ] Distance to stop (from user GPS)
 - [ ] Directions link (Apple Maps, Google Maps)
 
-### 3.3 Route Planning (Future)
+### 3.3 Full Route Planning (Deferred — later phase)
 - [ ] Walking route to stop
 - [ ] Bus line info + schedule
 - [ ] Accessibility details (elevators, ramps, etc.)
+- [ ] Full accessible route-finding (origin → destination journey planning) — no free/keyless Lisbon-area transit routing API exists (confirmed via direct research). Requires self-hosting OpenTripPlanner 2 (~$5-10/mo VM, several dev-days merging GTFS feeds). Distinct scoped project, not a quick add.
 
 ---
 
@@ -156,6 +163,15 @@ Transform transit-accessibility-planner into production iOS-first web app with r
 | Large dataset (300+ stops) | Lazy load markers; cluster on zoom out |
 | iOS notch blocking UI | Safe area CSS env vars; test on device |
 | Slow network | Progressive enhancement; cache-first SW |
+
+---
+
+## Rejected / Out of Scope
+
+**Google Maps Platform integration** — rejected.
+- Cost risk: free tier caps as low as 1,000–10,000 calls/mo depending on SKU; real overage pricing beyond that.
+- Unmitigable API key exposure on a static GitHub Pages site (no backend to guard it).
+- Google ToS forbids combining Directions/Geocoding content with a non-Google basemap — would force dropping Leaflet/OSM entirely.
 
 ---
 

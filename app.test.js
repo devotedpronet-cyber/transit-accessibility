@@ -20,7 +20,7 @@ describe("getDistance", () => {
 
 describe("findNearestStops", () => {
   test("returns stops sorted by distance", () => {
-    const results = findNearestStops(testStops, 38.7136, -9.1395);
+    const results = findNearestStops(testStops, 38.7136, -9.1395, 2, false);
     expect(Array.isArray(results)).toBe(true);
     expect(results.length).toBeGreaterThan(0);
     expect(results[0].distance <= results[results.length - 1].distance).toBe(true);
@@ -46,6 +46,23 @@ describe("findNearestStops", () => {
     results.forEach((stop) => {
       expect(stop.distance).toBeLessThanOrEqual(0.5);
     });
+  });
+
+  test("accessibleFirst=true sorts farther known-accessible stop before closer unknown stop", () => {
+    const results = findNearestStops(testStops, 38.7136, -9.1395, 2, true);
+    const accessibleIdx = results.findIndex((s) => s.id === 2); // Baixa-Chiado, known-accessible, farther
+    const unknownIdx = results.findIndex((s) => s.id === 1); // Rossio, unknown, closer (distance 0)
+    expect(results[accessibleIdx].distance).toBeGreaterThan(results[unknownIdx].distance);
+    expect(accessibleIdx).toBeLessThan(unknownIdx);
+  });
+
+  test("accessibleFirst=false preserves pure distance order", () => {
+    const results = findNearestStops(testStops, 38.7136, -9.1395, 2, false);
+    expect(Array.isArray(results)).toBe(true);
+    expect(results.length).toBeGreaterThan(0);
+    for (let i = 1; i < results.length; i++) {
+      expect(results[i].distance).toBeGreaterThanOrEqual(results[i - 1].distance);
+    }
   });
 });
 

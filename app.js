@@ -18,7 +18,7 @@ export function getDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-export function findNearestStops(stops, userLat, userLon, maxDistance = 2) {
+export function findNearestStops(stops, userLat, userLon, maxDistance = 2, accessibleFirst = true) {
   if (typeof userLat !== "number" || typeof userLon !== "number") {
     throw new Error("Invalid coordinates");
   }
@@ -35,7 +35,14 @@ export function findNearestStops(stops, userLat, userLon, maxDistance = 2) {
       distance: getDistance(userLat, userLon, stop.lat, stop.lon),
     }))
     .filter((stop) => stop.distance <= maxDistance)
-    .sort((a, b) => a.distance - b.distance);
+    .sort((a, b) => {
+      if (accessibleFirst) {
+        const aKnown = a.accessibility === "known-accessible" ? 0 : 1;
+        const bKnown = b.accessibility === "known-accessible" ? 0 : 1;
+        if (aKnown !== bKnown) return aKnown - bKnown;
+      }
+      return a.distance - b.distance;
+    });
 }
 
 export function formatResults(stops) {
