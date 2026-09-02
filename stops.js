@@ -14,6 +14,31 @@
 // whose source data doesn't have one. accessibility is one of 'known-accessible' |
 // 'unknown'. Do not add an 'elevator' field back without a real source.
 
+// Carris Metropolitana stop IDs cross-confirmed wheelchair-accessible via OSM
+// (`wheelchair=yes` on a bus_stop/platform/tram_stop node within 20m of the Carris
+// stop's own coordinates — Overpass API query, city-wide bbox, 2026-09-02). Carris's
+// own feed ships wheelchair_boarding=false (no info) on every stop, so this is the
+// only source that lets us mark these known-accessible instead of unknown. OSM tags
+// are crowdsourced, not an official operator claim — lower confidence than the Metro
+// station overlay above, but still a real, non-fabricated claim (someone tagged the
+// specific stop as wheelchair=yes), consistent with the "never fabricate" principle.
+const OSM_CONFIRMED_STOP_IDS = new Set([
+  '050190', '050197', '050200', '050203', '050241', '050305', '050399', '060001', '060011', '060189',
+  '060191', '060197', '060198', '060199', '060200', '060201', '060202', '060203', '060207', '060209',
+  '060211', '060217', '060322', '060323', '060325', '060327', '060333', '060361', '070590', '070605',
+  '070607', '071443', '071444', '071515', '071516', '071517', '110337', '170061', '170062', '170063',
+  '170064', '170065', '170066', '170067', '170069', '170071', '170073', '170075', '170077', '170079',
+  '170080', '170081', '170082', '170083', '170084', '170085', '170086', '170087', '170088', '170089',
+  '170090', '170091', '170092', '170093', '170099', '170101', '170103', '170104', '170128', '170129',
+  '170131', '170132', '170136', '170137', '170139', '170169', '170319', '171131', '171133', '171136',
+  '171137', '171139', '171141', '171143', '171155', '171205', '171875', '171877', '171878', '171881',
+  '171882', '171885', '171887', '171889', '171893', '171895', '171919', '172225', '172226', '172227',
+  '172228', '172229', '172230', '172245', '172253', '172290', '172292', '172294', '172298', '172302',
+  '172311', '172325', '172326', '172327', '172328', '172329', '172331', '172332', '172333', '172334',
+  '172335', '172336', '172338', '172339', '172340', '172342', '172343', '172492', '172493', '172601',
+  '7822',
+]);
+
 const STOPS_API = 'https://api.carrismetropolitana.pt/v2/stops';
 const LINES_API = 'https://api.carrismetropolitana.pt/v2/lines';
 const CACHE_KEY = 'stops-lisbon-v5';
@@ -130,7 +155,10 @@ async function fetchFromCarrisMetropolitana() {
       lon: Number(s.lon),
       // wheelchair_boarding is false (no info) on every stop in this feed as of 2026-09.
       // Surface that honestly instead of rendering a fake green/red accessibility badge.
-      accessibility: s.wheelchair_boarding === true ? 'known-accessible' : 'unknown',
+      // OSM_CONFIRMED_STOP_IDS fills 131 of these from cross-validated OSM tagging.
+      accessibility: s.wheelchair_boarding === true || OSM_CONFIRMED_STOP_IDS.has(s.id)
+        ? 'known-accessible'
+        : 'unknown',
       municipality: s.municipality_name || '',
       lines: (s.line_ids || []).map(id => lineLabelById.get(id)).filter(Boolean).join(', '),
     }));
