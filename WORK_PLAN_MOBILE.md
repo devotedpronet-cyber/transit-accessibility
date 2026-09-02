@@ -196,6 +196,8 @@ Transform transit-accessibility-planner into production iOS-first web app with r
 2. [x] Route section ("Route via accessible stops") must render directly under the Search/GPS button group, not below the note/results list. — commit c1548e3
 3. [x] Kill the "accessible stops near me" results list. Superseded by turning the "From" field into a dropdown: nearest accessible stops sorted by distance, distance shown per stop, picking one sets it as origin. — built, under review before commit
 4. [x] Bug: the "you are here" map marker and where the map recenters after tapping the GPS button don't match — same coordinate should drive both. — commit 8434bea (`setViewAboveSheet` helper). Also build: tap-and-drag the map to choose the starting location (pin-follows-map-center pattern) — commit 8483d59, reviewed + 2 bugs fixed pre-ship (race condition + closure-scoping in cancel).
+5. [x] `/v2/lines` join — stops now show real rider-facing line numbers (`stop.lines`) instead of empty field. Joins `stop.line_ids` against `/v2/lines[].short_name`. — commit 812f0d2, `stops.js`.
+6. [x] External PR #1 (stale, 15 commits behind main, touched dead `gtfs.js`/`mockStops` code that no longer exists) — closed, not merged. 5 still-valid a11y/security findings re-verified against current `main` and fixed directly instead: viewport `user-scalable=no` removed (WCAG 1.4.4), SRI hashes added to both Leaflet CDN tags, page heading promoted h2→h1, `<label for>` association fixed on From/To inputs, `aria-live="polite" role="status"` added to 3 dynamic result containers. Verified in live browser (labels/status roles/heading all confirmed via JS `.labels` + accessibility tree, no console errors, 21/21 tests still pass). — commit 68ee7b4.
 
 ---
 
