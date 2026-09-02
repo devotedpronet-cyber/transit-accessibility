@@ -25,6 +25,13 @@ const CACHE_TTL = 24 * 60 * 60 * 1000; // 24h — live API, no need for a stale 
 // (services.arcgis.com/1dSrzEWVQn5kHHyK/.../POITransportes/FeatureServer/1). This list
 // is the subset of those 47 we could positively confirm by name from Metro's own site —
 // not the full 47. Extend it if a full official roster surfaces.
+//
+// KNOWN DISAGREEMENT (OSM cross-validation, 2026-09-02, Overpass query against
+// node["station"="subway"]): OSM's wheelchair=* tag says 'no' for Colégio Militar/Luz
+// and Campo Pequeno, contradicting Metro's own accessible-list below. Kept as
+// known-accessible since the primary source (Metro's own announcement) outranks
+// crowdsourced OSM tagging, which can go stale — but flagged here rather than
+// silently picking one. Re-verify these two first if a rider ever reports a problem.
 const ACCESSIBLE_METRO_STATIONS = [
   { name: 'Roma (Metro)', lat: 38.7482228024879, lon: -9.14134526152344 },
   { name: 'Colégio Militar/Luz (Metro)', lat: 38.753441421465, lon: -9.18930499007435 },
@@ -41,6 +48,15 @@ const ACCESSIBLE_METRO_STATIONS = [
   { name: 'Praça de Espanha (Metro)', lat: 38.7377491106506, lon: -9.15925422094947 },
   { name: 'Martim Moniz (Metro)', lat: 38.7177019399986, lon: -9.13573782228017 },
   { name: 'Intendente (Metro)', lat: 38.7232980404134, lon: -9.13518490808126 },
+  // Added 2026-09-02 via OSM cross-validation (Overpass, wheelchair=yes on
+  // node["station"="subway"]) — not previously in our manually-confirmed 15.
+  // Coordinates are OSM's own, not yet cross-checked against the ArcGIS feed above.
+  { name: 'Aeroporto (Metro)', lat: 38.7684185, lon: -9.1282772 },
+  { name: 'Ameixoeira (Metro)', lat: 38.779605, lon: -9.1594573 },
+  { name: 'Chelas (Metro)', lat: 38.754825, lon: -9.1138702 },
+  { name: 'Odivelas (Metro)', lat: 38.7932694, lon: -9.172982 },
+  { name: 'Restauradores (Metro)', lat: 38.7159968, lon: -9.1423098 },
+  { name: 'Santa Apolónia (Metro)', lat: 38.7136899, lon: -9.1224537 },
 ];
 
 // Transtejo/Soflusa ferry terminals confirmed accessible ("Instalações adaptadas a
