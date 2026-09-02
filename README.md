@@ -25,8 +25,11 @@ open index.html    # Open in browser
 
 ## File Structure
 
+- `gtfs.js` — Hand-curated stop data (single source for both list and map); see `docs/ARCHITECTURE.md` for data source caveats
 - `app.js` — Core logic (distance calc, stop filtering)
-- `app.test.js` — Unit tests (3 test suites, 70%+ coverage)
+- `app.test.js` — Unit tests for `app.js`
+- `map.js` — Leaflet map rendering, bottom sheet resize support
+- `map.test.js` — Unit tests for `gtfs.js` and `map.js`
 - `index.html` — Browser UI
 - `docs/ARCHITECTURE.md` — Design rationale
 

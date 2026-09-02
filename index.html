@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-PT">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Transit Acessível">
   <title>Lisbon Transit Accessibility</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+    integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="manifest" href="manifest.json">
   <style>
     :root {
@@ -21,6 +23,7 @@
       --text-secondary: #666;
       --bg: #fff;
       --border: #e5e5ea;
+      --sheet-detent: 50dvh;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -42,6 +45,18 @@
       background: var(--bg);
     }
 
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     #map {
       position: fixed;
       top: 0;
@@ -56,7 +71,7 @@
       bottom: 0;
       left: 0;
       right: 0;
-      max-height: 60vh;
+      height: 92dvh;
       background: var(--bg);
       border-radius: 20px 20px 0 0;
       box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
@@ -65,14 +80,27 @@
       padding-bottom: calc(16px + var(--safe-bottom));
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      transform: translateY(calc(100% - var(--sheet-detent)));
+      transition: transform 0.3s ease-out;
     }
 
     .sheet-handle {
+      display: block;
       width: 40px;
       height: 5px;
       background: var(--border);
+      border: none;
       border-radius: 3px;
       margin: 8px auto 16px;
+      padding: 0;
+      min-height: 0;
+      flex: none;
+      cursor: pointer;
+    }
+
+    .sheet-handle:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 4px;
     }
 
     .sheet-header {
@@ -165,21 +193,32 @@
 
     .results {
       margin-top: 16px;
+      list-style: none;
     }
 
     .stop {
+      display: block;
+      width: 100%;
+      flex: none;
+      min-height: auto;
+      text-align: left;
+      font-weight: 400;
       background: var(--bg);
       padding: 12px;
       margin-bottom: 12px;
+      border: none;
       border-left: 4px solid var(--secondary);
       border-radius: 8px;
       cursor: pointer;
-      -webkit-user-select: none;
-      user-select: none;
     }
 
     .stop:active {
       background: rgba(0, 122, 255, 0.05);
+    }
+
+    .stop:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
     }
 
     .stop-name {
@@ -215,7 +254,7 @@
 
     .gps-btn {
       position: fixed;
-      bottom: calc(60vh + 16px + var(--safe-bottom));
+      bottom: calc(var(--sheet-detent) + 16px + var(--safe-bottom));
       right: 16px;
       width: 50px;
       height: 50px;
@@ -238,12 +277,13 @@
     @media (min-width: 768px) {
       .bottom-sheet {
         max-width: 400px;
-        bottom: auto;
+        bottom: 0;
         left: auto;
+        right: 0;
         top: 0;
         height: 100%;
         border-radius: 0;
-        max-height: none;
+        transform: none;
       }
 
       .sheet-handle {
@@ -253,26 +293,30 @@
       .gps-btn {
         bottom: auto;
         top: 100px;
+        right: calc(400px + 16px);
       }
     }
   </style>
 </head>
 <body>
+  <h1 class="sr-only">Lisbon Transit Accessibility</h1>
+  <div id="sr-status" role="status" aria-live="polite" class="sr-only"></div>
+
   <div id="map"></div>
 
   <div class="bottom-sheet">
-    <div class="sheet-handle"></div>
+    <button type="button" id="sheet-handle" class="sheet-handle" aria-expanded="true" aria-label="Resize results panel"></button>
     <div class="sheet-header">
       <h2>Find Stops</h2>
     </div>
 
     <div class="input-group">
-      <label>Latitude</label>
+      <label for="latitude">Latitude</label>
       <input type="number" id="latitude" placeholder="38.7136" step="0.0001" inputmode="decimal">
     </div>
 
     <div class="input-group">
-      <label>Longitude</label>
+      <label for="longitude">Longitude</label>
       <input type="number" id="longitude" placeholder="-9.1399" step="0.0001" inputmode="decimal">
     </div>
 
@@ -281,22 +325,60 @@
       <button class="btn-secondary" id="gps-inline">📍 Use GPS</button>
     </div>
 
-    <div id="results" class="results"></div>
+    <ul id="results" class="results" role="list"></ul>
   </div>
 
   <button class="gps-btn" id="gps-fab" title="Recenter on location">📍</button>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"
+    integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script type="module">
     import { findNearestStepFreeStops } from "./app.js";
-    import { initMap } from "./map.js";
+    import { initMap, focusStop, adjustForSheetHeight } from "./map.js";
+
+    const DETENTS = ['20dvh', '50dvh', '92dvh'];
+    let detentIndex = 1;
 
     window.addEventListener('DOMContentLoaded', async () => {
       await initMap('map');
       setupGPS();
+      setupSheet();
       loadDefaults();
       window.search();
+      applyDetent(detentIndex);
     });
+
+    function setupSheet() {
+      const handle = document.getElementById('sheet-handle');
+      handle.addEventListener('click', () => {
+        applyDetent((detentIndex + 1) % DETENTS.length);
+      });
+
+      window.addEventListener('resize', () => {
+        adjustForSheetHeight(dvhToPx(DETENTS[detentIndex]));
+      });
+      window.addEventListener('orientationchange', () => {
+        setTimeout(() => adjustForSheetHeight(dvhToPx(DETENTS[detentIndex])), 250);
+      });
+    }
+
+    function dvhToPx(dvh) {
+      const value = parseFloat(dvh);
+      const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      return (value / 100) * viewportHeight;
+    }
+
+    function applyDetent(index) {
+      detentIndex = index;
+      const detent = DETENTS[index];
+      document.documentElement.style.setProperty('--sheet-detent', detent);
+
+      const handle = document.getElementById('sheet-handle');
+      handle.setAttribute('aria-expanded', detent === '20dvh' ? 'false' : 'true');
+
+      setTimeout(() => adjustForSheetHeight(dvhToPx(detent)), 300);
+    }
 
     function setupGPS() {
       const gpsBtn = document.getElementById('gps-inline');
@@ -314,7 +396,7 @@
     function requestLocation() {
       const gpsBtn = document.getElementById('gps-inline');
       const gpsFab = document.getElementById('gps-fab');
-      const resultsDiv = document.getElementById('results');
+
       gpsBtn.textContent = '🔄 Locating...';
       gpsBtn.disabled = true;
       gpsFab.disabled = true;
@@ -352,13 +434,13 @@
           gpsFab.disabled = false;
 
           if (error.code === error.PERMISSION_DENIED) {
-            resultsDiv.innerHTML = '<div class="error">GPS permission denied. Enable location access in settings.</div>';
+            setMessage('error', 'GPS permission denied. Enable location access in settings.');
           } else if (error.code === error.TIMEOUT) {
-            resultsDiv.innerHTML = '<div class="error">GPS timeout. Try outdoors or enter coordinates manually.</div>';
+            setMessage('error', 'GPS timeout. Try outdoors or enter coordinates manually.');
           } else if (error.code === error.POSITION_UNAVAILABLE) {
-            resultsDiv.innerHTML = '<div class="error">GPS unavailable. Check device location settings.</div>';
+            setMessage('error', 'GPS unavailable. Check device location settings.');
           } else {
-            resultsDiv.innerHTML = '<div class="error">GPS error: ' + error.message + '</div>';
+            setMessage('error', 'GPS error: ' + error.message);
           }
         },
         { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
@@ -389,13 +471,29 @@
       document.getElementById('longitude').value = lon;
     }
 
+    function setMessage(className, text) {
+      const resultsList = document.getElementById('results');
+      resultsList.innerHTML = '';
+      const li = document.createElement('li');
+      const div = document.createElement('div');
+      div.className = className;
+      div.textContent = text;
+      li.appendChild(div);
+      resultsList.appendChild(li);
+    }
+
+    function announce(text) {
+      document.getElementById('sr-status').textContent = text;
+    }
+
     window.search = function() {
       const lat = parseFloat(document.getElementById('latitude').value);
       const lon = parseFloat(document.getElementById('longitude').value);
-      const resultsDiv = document.getElementById('results');
+      const resultsList = document.getElementById('results');
 
       if (isNaN(lat) || isNaN(lon)) {
-        resultsDiv.innerHTML = '<div class="error">Enter valid coordinates</div>';
+        setMessage('error', 'Enter valid coordinates');
+        announce('Enter valid coordinates.');
         return;
       }
 
@@ -405,21 +503,48 @@
       try {
         const stops = findNearestStepFreeStops(lat, lon);
         if (stops.length === 0) {
-          resultsDiv.innerHTML = '<div class="empty">No accessible stops within 2km</div>';
+          setMessage('empty', 'No accessible stops within 2km');
+          announce('No accessible stops found within 2 kilometers.');
           return;
         }
 
-        resultsDiv.innerHTML = stops
-          .map((stop) => `
-            <div class="stop">
-              <div class="stop-name">${stop.name}</div>
-              <div class="stop-distance">${stop.distance.toFixed(2)} km away</div>
-              <div class="stop-lines">${stop.line}</div>
-            </div>
-          `)
-          .join('');
+        resultsList.innerHTML = '';
+        stops.forEach((stop) => {
+          const li = document.createElement('li');
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'stop';
+
+          const nameEl = document.createElement('div');
+          nameEl.className = 'stop-name';
+          nameEl.textContent = stop.name;
+
+          const distEl = document.createElement('div');
+          distEl.className = 'stop-distance';
+          distEl.textContent = `${stop.distance.toFixed(2)} km away`;
+
+          const linesEl = document.createElement('div');
+          linesEl.className = 'stop-lines';
+          linesEl.textContent = stop.lines;
+
+          btn.appendChild(nameEl);
+          btn.appendChild(distEl);
+          btn.appendChild(linesEl);
+
+          btn.addEventListener('click', () => {
+            focusStop(stop.id);
+            btn.focus();
+          });
+
+          li.appendChild(btn);
+          resultsList.appendChild(li);
+        });
+
+        const plural = stops.length === 1 ? '' : 's';
+        announce(`${stops.length} accessible stop${plural} found. Nearest: ${stops[0].name}, ${stops[0].distance.toFixed(2)} kilometers away.`);
       } catch (error) {
-        resultsDiv.innerHTML = `<div class="error">${error.message}</div>`;
+        setMessage('error', error.message);
+        announce(`Error: ${error.message}`);
       }
     };
   </script>

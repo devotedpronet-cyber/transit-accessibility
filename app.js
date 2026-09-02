@@ -1,12 +1,4 @@
-// Mock Lisbon bus stops with accessibility info
-export const mockStops = [
-  { id: 1, name: "Rossio", lat: 38.7136, lon: -9.1399, stepFree: true, line: "1,2,3,91" },
-  { id: 2, name: "Baixa-Chiado", lat: 38.7076, lon: -9.1422, stepFree: true, line: "28" },
-  { id: 3, name: "Terreiro do Paço", lat: 38.7072, lon: -9.1310, stepFree: true, line: "15,25" },
-  { id: 4, name: "Belém", lat: 38.6617, lon: -9.2040, stepFree: false, line: "14,28" },
-  { id: 5, name: "Oriente", lat: 38.7674, lon: -9.0948, stepFree: true, line: "5,10,12" },
-  { id: 6, name: "Príncipe Real", lat: 38.7161, lon: -9.1407, stepFree: false, line: "9,758" },
-];
+import { STOPS } from "./gtfs.js";
 
 export function getDistance(lat1, lon1, lat2, lon2) {
   const toRad = (deg) => (deg * Math.PI) / 180;
@@ -28,8 +20,8 @@ export function findNearestStepFreeStops(userLat, userLon, maxDistance = 2) {
     throw new Error("Coordinates out of range");
   }
 
-  return mockStops
-    .filter((stop) => stop.stepFree)
+  return STOPS
+    .filter((stop) => stop.wheelchair)
     .map((stop) => ({
       ...stop,
       distance: getDistance(userLat, userLon, stop.lat, stop.lon),
@@ -43,6 +35,6 @@ export function formatResults(stops) {
     return "No accessible stops found within 2km.";
   }
   return stops
-    .map((stop) => `${stop.name} (${stop.distance.toFixed(2)}km) - Lines: ${stop.line}`)
+    .map((stop) => `${stop.name} (${stop.distance.toFixed(2)}km) - Lines: ${stop.lines}`)
     .join("\n");
 }

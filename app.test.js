@@ -1,4 +1,4 @@
-import { findNearestStepFreeStops, formatResults, getDistance, mockStops } from "./app.js";
+import { findNearestStepFreeStops, formatResults, getDistance } from "./app.js";
 
 describe("getDistance", () => {
   test("calculates distance between two coordinates", () => {
@@ -13,7 +13,7 @@ describe("findNearestStepFreeStops", () => {
     const results = findNearestStepFreeStops(38.7136, -9.1399);
     expect(Array.isArray(results)).toBe(true);
     expect(results.length).toBeGreaterThan(0);
-    expect(results[0].stepFree).toBe(true);
+    expect(results[0].wheelchair).toBe(true);
     expect(results[0].distance <= results[results.length - 1].distance).toBe(true);
   });
 
