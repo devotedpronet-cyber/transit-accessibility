@@ -121,7 +121,8 @@ Sequences the 5 ranked candidates from the backlog above. Moonshots stay unsched
 
 ### 5.1 Willeasy Integration
 Goal: close the 47-station accessible-metro gap (currently 15/47 confirmed) with an authoritative source instead of manual confirmation.
-- [ ] First step: find and evaluate a direct Willeasy data export/API (per 2023 Público coverage of Metro de Lisboa's own accessibility system).
+- [x] First step: evaluated Willeasy (willeasy.net) for a direct data export/API — **not usable off-the-shelf**. Run by Willeasy S.r.l. (Italy), consumer-facing map/search + crowdsourcing app only, no public API/dataset/export found anywhere on site or in press coverage. Content licensed CC BY-ND 4.0 (attribution + **no derivatives** — blocks reformatting into our own DB even if data were obtained). Station coverage vs. our 47 unconfirmed. Verdict: **(b) needs partnership** — closing this gap requires directly emailing `info@willeasy.net` to negotiate data access/an ND-license exception, not a self-serve integration. (Investigated 2026-09-02.)
+- [ ] Next step: send partnership inquiry to Willeasy, or fall back to 5.2 (OSM/GTFS Pathways) as the actual near-term path to shrink the accessibility gap while a Willeasy response (if any) is pending.
 
 ### 5.2 OSM / GTFS Pathways Cross-Validation
 Goal: shrink the `unknown` bucket and cross-check Carris's own accessibility claims, without backend cost (reads only).
