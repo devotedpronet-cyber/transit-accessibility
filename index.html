@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Transit Acessível">
   <meta name="theme-color" content="#fff" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#000" media="(prefers-color-scheme: dark)">
   <title>Lisbon Transit Accessibility</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="manifest" href="manifest.json">
   <style>
     :root {
@@ -89,7 +89,7 @@
       margin-bottom: 16px;
     }
 
-    .sheet-header h2 {
+    .sheet-header h1 {
       font-size: 18px;
       font-weight: 600;
     }
@@ -525,7 +525,7 @@
   <div class="bottom-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-      <h2 id="sheet-title">Find Stops</h2>
+      <h1 id="sheet-title">Find Stops</h1>
       <div class="lang-switcher">
         <button type="button" class="lang-trigger" id="lang-trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Change language, current: English">🇬🇧</button>
         <div class="lang-dropdown" id="lang-dropdown" role="listbox" aria-label="Select language" tabindex="-1"></div>
@@ -533,22 +533,22 @@
     </div>
 
     <div class="input-group autocomplete">
-      <label id="from-label">From</label>
+      <label id="from-label" for="origin-input">From</label>
       <input type="text" id="origin-input" placeholder="Address, or use GPS" autocomplete="off">
-      <div id="origin-suggestions" class="suggestions"></div>
+      <div id="origin-suggestions" class="suggestions" aria-live="polite" role="status"></div>
     </div>
 
     <div class="input-group autocomplete">
-      <label id="to-label">To (optional) — accessible stops near your destination</label>
+      <label id="to-label" for="dest-input">To (optional) — accessible stops near your destination</label>
       <input type="text" id="dest-input" placeholder="Destination address" autocomplete="off">
-      <div id="dest-suggestions" class="suggestions"></div>
+      <div id="dest-suggestions" class="suggestions" aria-live="polite" role="status"></div>
     </div>
 
     <div class="button-group">
       <button class="btn-primary" id="search-btn" onclick="window.search()">Search</button>
     </div>
 
-    <div id="dest-results-wrap"></div>
+    <div id="dest-results-wrap" aria-live="polite" role="status"></div>
 
     <p class="note" id="note-text">Only 15 metro stations + 9 ferry terminals have confirmed wheelchair access data city-wide. This app shows confirmed-accessible stops only — everything else is unconfirmed, not shown, to avoid implying access that isn't verified.</p>
 
@@ -559,7 +559,7 @@
   <button class="set-start-bar btn-primary" id="set-start-bar" type="button"></button>
   <button class="gps-btn" id="gps-fab" title="Recenter on location" aria-label="Recenter on location">📍</button>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script type="module">
     import { findNearestStops, nearestAccessibleStop } from "./app.js";
     import { initMap, getStops } from "./map.js";
