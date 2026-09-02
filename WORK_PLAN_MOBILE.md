@@ -115,6 +115,32 @@ Transform transit-accessibility-planner into production iOS-first web app with r
 
 ---
 
+## Phase 5: Competitive Expansion (post-launch)
+
+Sequences the 5 ranked candidates from the backlog above. Moonshots stay unscheduled — not triaged for feasibility yet. Each subsection: goal + concrete first step; full task breakdown happens when the phase is actually started, per existing convention.
+
+### 5.1 Willeasy Integration
+Goal: close the 47-station accessible-metro gap (currently 15/47 confirmed) with an authoritative source instead of manual confirmation.
+- [ ] First step: find and evaluate a direct Willeasy data export/API (per 2023 Público coverage of Metro de Lisboa's own accessibility system).
+
+### 5.2 OSM / GTFS Pathways Cross-Validation
+Goal: shrink the `unknown` bucket and cross-check Carris's own accessibility claims, without backend cost (reads only).
+- [ ] First step: prototype an Overpass API query for `wheelchair=*` tags against the current stop set, diff against `stops.js` accessibility values.
+
+### 5.3 Live Elevator/Escalator Status (first Firebase-backed feature)
+Goal: real-time Metro Lisboa elevator status where none exists as a public API today.
+- [ ] First step: stand up a scheduled Firebase Function that polls `metrolisboa.pt/viajar/estado-das-linhas-e-elevadores` and writes normalized status to Firestore, with a "last checked" timestamp surfaced alongside any value shown in-app.
+
+### 5.4 Outage-Aware Trip Warnings
+Goal: turn a binary accessible/not flag into "accessible route exists, but the lift at [station] has been down since [time]."
+- [ ] First step (depends on 5.3 shipping): wire the Firestore elevator-status read into the existing results-rendering path in `app.js`/`map.js`.
+
+### 5.5 Last-Mile Sidewalk/Curb-Cut Routing
+Goal: the one accessibility capability none of Google Maps, Citymapper, or Moovit have. Largest lift — own phase, benefits from 5.2's OSM data but doesn't depend on it.
+- [ ] First step: pull OpenSidewalks-tagged sidewalk/crossing/curb data for a small radius around one pilot stop cluster via Overpass, precompute a local pedestrian graph, prototype client-side A* (`ngraph.path`) over it before deciding whether to scale city-wide.
+
+---
+
 ## Success Criteria
 
 ### Phase 1 ✓
@@ -189,6 +215,30 @@ Transform transit-accessibility-planner into production iOS-first web app with r
 - Mode-of-transport marker differentiation (bus/tram/metro/rail/ferry). Partial research done: ~52-name Metro station roster (Wikipedia), 9 ferry terminal names (WebSearch), CP rail roster incomplete. A substring name-heuristic was tried and explicitly rejected (false positives: "...ESTACIONA" matched as parking, bus stops near train stations mislabeled as rail) — do not resurrect that approach; needs real per-mode feed data or an explicit `mode` field from a joined source.
 - Full official roster of all 47 accessible Metro stations (currently only 15 of 47 confirmed by name from Metro de Lisboa's own site are in `stops.js`'s `ACCESSIBLE_METRO_STATIONS` overlay — extend if a complete official list surfaces, e.g. from Metro de Lisboa's accessibility page directly rather than news articles).
 - Pedrouços/Algés ferry terminal accessibility status unconfirmed (excluded from the overlay pending real data).
+
+### Ranked candidates (expansion research, 2026-09-02)
+
+Full writeup + sources: `docs/EXPANSION_ROADMAP.md`. Architecture note: Firebase (Functions/Firestore) is confirmed viable as a backend — not limited to the current static GH Pages deployment for these.
+
+- Live elevator/escalator status for Metro Lisboa — Metro Lisboa runs a status page (`metrolisboa.pt/viajar/estado-das-linhas-e-elevadores`) with no public API. Scheduled Firebase Function scrapes/normalizes into Firestore, served as a real endpoint. Show "last checked" timestamp — scraping can't back the same certainty an API would.
+- Willeasy integration — Metro de Lisboa's own per-station accessibility system (platform/entrance/stairs/escalator/elevator/lift-chair), per 2023 Público coverage. Check for a direct export/API before doing more manual station-by-station confirmation — likely closes the 47-station gap above directly.
+- OSM `wheelchair=*` / GTFS Pathways cross-validation — Overpass API (free, ODbL), cross-check Carris's own accessibility claims and fill genuine `unknown` gaps (ferry terminals, ambiguous stations) without fabricating certainty. Wheelmap write API could extend the existing OSM Notes crowdsourcing link into structured tag writes.
+- Last-mile sidewalk/curb-cut routing (AccessMap-style) — the one capability none of Google Maps/Citymapper/Moovit have. Pull OSM sidewalk/crossing/curb data (OpenSidewalks tag schema) per stop-cluster via Firebase Function, precompute a small local pedestrian graph, client-side A*/`ngraph.path` for the final leg. Largest lift on this list — own phase.
+- Outage-aware trip warnings — depends on the elevator-status item above. Surface inline in results: "accessible route exists, but the lift at [station] has been down since [time]" instead of a binary flag.
+
+### Moonshots (unscoped, 2026-09-02 — not triaged for feasibility)
+
+Creative pass, deliberately unfiltered by current effort/architecture per explicit direction. Full writeup: `docs/EXPANSION_ROADMAP.md`.
+
+- Crowd-verified elevator status — QR code or geofenced "tap to confirm this is working" at the elevator, faster than any official feed's update cycle.
+- Predictive accessibility — model which elevators fail most (time-of-day/day-of-week) from historical status data, warn before the trip.
+- Accessible-route social proof — "12 wheelchair users completed this route this week," Waze-style crowd-density model for accessibility confidence instead of traffic.
+- Companion/buddy matching — opt-in matching of riders on similar routes/times, addresses "fear of being stranded alone" directly.
+- City accountability dashboard — public aggregate view of which stations/elevators fail most, a civic-pressure tool (matches the Civic Code contest's own framing).
+- Voice-first/hands-free mode — full voice interaction for riders with limited hand mobility, not a layer bolted onto a visual UI.
+- "Accessible day" trip chaining — verify a whole multi-stop itinerary (pharmacy → park → café) end-to-end, not just point-to-point.
+- Physical world integration — QR codes at elevators/ramps (placed by the city) linking into the app's live status + report flow.
+- Open accessibility data as the product — publish the cross-validated dataset (Carris + OSM + Willeasy + live status) as an open API for other Lisbon apps/researchers.
 
 ### Requested 2026-09-01 (in progress, this batch)
 
