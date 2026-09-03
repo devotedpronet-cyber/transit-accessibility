@@ -1,10 +1,12 @@
-const { onSchedule } = require('firebase-functions/v2/scheduler');
-const { onRequest } = require('firebase-functions/v2/https');
-const { initializeApp } = require('firebase-admin/app');
+#!/usr/bin/env node
+// Polls the undocumented Metro Lisboa AJAX status endpoint and writes
+// normalized per-equipment rows to Firestore. Run by
+// .github/workflows/poll-elevator-status.yml on a schedule (no Firebase
+// Cloud Functions / Blaze plan required). See WORK_PLAN_MOBILE.md Phase 5.3.
+
+const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { load } = require('cheerio');
-
-initializeApp();
 
 const STATUS_URL =
   'https://www.metrolisboa.pt/wp-admin/admin-ajax.php?action=estado_linha_ajax_2022_nova_action';
@@ -20,9 +22,6 @@ function slugify(value) {
     .replace(/(^-|-$)/g, '');
 }
 
-// Parses the undocumented Metro Lisboa AJAX fragment into per-equipment
-// status rows. Markup is unversioned and can change without notice — see
-// WORK_PLAN_MOBILE.md Phase 5.3.
 function parseElevatorStatus(html) {
   const $ = load(html);
   const rows = [];
@@ -60,7 +59,7 @@ function parseElevatorStatus(html) {
   return rows;
 }
 
-async function pollAndStore() {
+async function main() {
   const response = await fetch(STATUS_URL);
   if (!response.ok) {
     throw new Error(`Metro Lisboa status endpoint returned ${response.status}`);
@@ -74,6 +73,13 @@ async function pollAndStore() {
     throw new Error('Parsed zero equipment rows — source markup may have changed');
   }
 
+  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (!serviceAccountJson) {
+    throw new Error('FIREBASE_SERVICE_ACCOUNT env var not set');
+  }
+  const serviceAccount = JSON.parse(serviceAccountJson);
+
+  initializeApp({ credential: cert(serviceAccount) });
   const db = getFirestore();
   const batch = db.batch();
   const checkedAt = FieldValue.serverTimestamp();
@@ -93,27 +99,10 @@ async function pollAndStore() {
   }
 
   await batch.commit();
-  return rows.length;
+  console.log(`Updated ${rows.length} equipment rows`);
 }
 
-exports.pollElevatorStatus = onSchedule(
-  { schedule: 'every 10 minutes', region: 'europe-west1', timeoutSeconds: 60 },
-  async () => {
-    const count = await pollAndStore();
-    console.log(`Updated ${count} equipment rows`);
-  }
-);
-
-// Manual trigger for testing / on-demand refresh.
-exports.pollElevatorStatusNow = onRequest(
-  { region: 'europe-west1' },
-  async (req, res) => {
-    try {
-      const count = await pollAndStore();
-      res.status(200).json({ ok: true, updated: count });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ ok: false, error: err.message });
-    }
-  }
-);
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
