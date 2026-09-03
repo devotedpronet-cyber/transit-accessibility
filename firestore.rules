@@ -1,0 +1,12 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Elevator status is written only by the scheduled Cloud Function
+    // (Admin SDK, bypasses rules). Clients get read-only access.
+    match /elevatorStatus/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
