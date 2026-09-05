@@ -82,6 +82,45 @@ const ACCESSIBLE_METRO_STATIONS = [
   { name: 'Odivelas (Metro)', lat: 38.7932694, lon: -9.172982 },
   { name: 'Restauradores (Metro)', lat: 38.7159968, lon: -9.1423098 },
   { name: 'Santa Apolónia (Metro)', lat: 38.7136899, lon: -9.1224537 },
+  // Added 2026-09-05 via direct visual read of Metro de Lisboa's own official
+  // accessibility network diagram (wheelchair-lift icon next to station name),
+  // https://www.metrolisboa.pt/wp-content/uploads/2026/08/DiagramadaRedeAcessibilidades_EN_Agosto_2026.pdf
+  // (August 2026 edition). Coordinates geocoded via Photon (same geocoder used
+  // for the ferry terminals above), cross-checked against Wikipedia infobox
+  // coordinates for Bela Vista and Encarnação after Photon returned mismatched
+  // places for those two names.
+  //
+  // KNOWN DISAGREEMENT: this same diagram shows 'Praça de Espanha' WITHOUT a
+  // wheelchair-lift icon (grayed station name, no icon), contradicting the
+  // 2026-07-27-sourced entry already above. Not removing that entry — a diagram
+  // disagreeing with an announcement doesn't tell us which is stale — but
+  // flagging it here per CONTRIBUTING's "don't silently replace" rule. Re-verify
+  // Praça de Espanha's status directly with Metro de Lisboa before trusting
+  // either source further.
+  //
+  // Stations visually confirmed WITHOUT the icon on this same diagram (left as
+  // 'unknown', not added here, since the rule is never infer/assume): Anjos,
+  // Avenida, Parque, Laranjeiras, Jardim Zoológico, Alto dos Moinhos.
+  { name: 'Senhor Roubado (Metro)', lat: 38.7853368, lon: -9.1719844 },
+  { name: 'Lumiar (Metro)', lat: 38.7658542, lon: -9.1511228 },
+  { name: 'Quinta das Conchas (Metro)', lat: 38.7666851, lon: -9.1558465 },
+  { name: 'Telheiras (Metro)', lat: 38.7599763, lon: -9.1665515 },
+  { name: 'Alfornelos (Metro)', lat: 38.7602248, lon: -9.2040368 },
+  { name: 'Amadora Este (Metro)', lat: 38.7589911, lon: -9.2177484 },
+  { name: 'Pontinha (Metro)', lat: 38.761702, lon: -9.1970672 },
+  { name: 'Carnide (Metro)', lat: 38.7595021, lon: -9.1926533 },
+  { name: 'Reboleira (Metro)', lat: 38.7519194, lon: -9.2245245 },
+  { name: 'Alvalade (Metro)', lat: 38.7593359, lon: -9.1599141 },
+  { name: 'Moscavide (Metro)', lat: 38.778447, lon: -9.1021419 },
+  { name: 'Encarnação (Metro)', lat: 38.77472, lon: -9.11528 },
+  { name: 'Oriente (Metro)', lat: 38.7678004, lon: -9.0987071 },
+  { name: 'Cabo Ruivo (Metro)', lat: 38.762962, lon: -9.1040553 },
+  { name: 'Olivais (Metro)', lat: 38.769063, lon: -9.1284459 },
+  { name: 'Bela Vista (Metro)', lat: 38.74694, lon: -9.11694 },
+  { name: 'Olaias (Metro)', lat: 38.7394653, lon: -9.1239461 },
+  { name: 'Saldanha (Metro)', lat: 38.7300338, lon: -9.1467791 },
+  { name: 'Marquês de Pombal (Metro)', lat: 38.7256146, lon: -9.1521747 },
+  { name: 'S. Sebastião (Metro)', lat: 38.7296897, lon: -9.1502994 },
 ];
 
 // Transtejo/Soflusa ferry terminals confirmed accessible ("Instalações adaptadas a
