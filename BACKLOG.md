@@ -2,6 +2,10 @@
 
 Open work on the Lisbon Transit Accessibility Planner. Each item links to its tracking issue — check the issue for full context before starting. Contributions welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## 🙋 Help wanted: backend
+
+The app is currently a static frontend (GH Pages) plus Firestore and a free GitHub Actions poller — no paid Cloud Functions yet. That's the ceiling blocking Phase 5.4 and 5.5 below: both need real server-side work (wiring live Firestore reads into the UI, and eventually a small routing service for sidewalk/curb-cut pathfinding). If you can build Firebase Functions / Cloud Run pieces, or help cover Blaze-tier cost if usage grows, this is the single highest-leverage way to unstick the project. Open an issue or comment on #5 / #6 to pick this up.
+
 ## Phase 5 — data & routing
 
 - [ ] **Phase 5.1: Willeasy accessible-metro data partnership** ([#2](https://github.com/devotedpronet-cyber/transit-accessibility/issues/2)) — no public API/export exists (CC BY-ND license blocks scraping/reformatting anyway); needs a direct partnership ask to `info@willeasy.net`.
