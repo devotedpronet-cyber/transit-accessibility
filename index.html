@@ -1379,6 +1379,14 @@
               <p class="route-note" style="margin-top:4px;">${t.routeNote2}</p>
             `;
           }
+        } else {
+          // No destination picked yet — show nearest accessible stops to the
+          // origin so Search always produces visible output, not a blank sheet.
+          const accessibleStops = stops.filter((s) => s.accessibility === 'known-accessible');
+          const nearest = findNearestStops(accessibleStops, window.origin.lat, window.origin.lon, 50, false).slice(0, 5);
+          destWrap.innerHTML = nearest.length === 0
+            ? `<div class="dest-results-header">${t.nearestStopsHeader}</div><div class="empty">${t.routeNoStopsFound}</div>`
+            : `<div class="dest-results-header">${t.nearestStopsHeader}</div>` + nearest.map(renderStopCard).join('');
         }
       } catch (error) {
         document.getElementById('origin-suggestions').innerHTML = `<div class="error">${error.message}</div>`;
