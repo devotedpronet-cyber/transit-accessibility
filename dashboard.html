@@ -88,13 +88,32 @@
     font-size: 11px;
     margin-top: 6px;
   }
+  .lang-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .lang-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 15px;
+    cursor: pointer;
+    opacity: 0.5;
+  }
+  .lang-btn.active {
+    opacity: 1;
+    border-color: var(--primary);
+  }
 </style>
 </head>
 <body>
   <div class="wrap">
-    <a class="back-link" href="index.html">← Back to trip planner</a>
-    <h1>Metro Lisboa elevator &amp; escalator status</h1>
-    <p class="subtitle">
+    <div class="lang-row" id="lang-row"></div>
+    <a class="back-link" href="index.html" id="back-link">← Back to trip planner</a>
+    <h1 id="page-title">Metro Lisboa elevator &amp; escalator status</h1>
+    <p class="subtitle" id="page-subtitle">
       A public, unfiltered view of every elevator/escalator status reading Metro Lisboa's own live feed reports right now.
       No editorializing — this is the same data the trip planner uses to warn riders, shown in full so anyone can hold the network accountable for accessibility uptime.
     </p>
@@ -103,12 +122,12 @@
       <div class="headline-number" id="headline-number">—</div>
       <div class="headline-label" id="headline-label">Loading live status…</div>
       <div class="updated" id="updated"></div>
-      <div class="refresh-note">Auto-refreshes every 60s</div>
+      <div class="refresh-note" id="refresh-note">Auto-refreshes every 60s</div>
     </div>
 
     <div id="content"></div>
 
-    <p class="footer-note">
+    <p class="footer-note" id="footer-note">
       Source: Metro Lisboa's live elevator/escalator status feed, polled automatically and stored in Firestore (see
       <a href="https://github.com/devotedpronet-cyber/transit-accessibility" style="color:inherit">devotedpronet-cyber/transit-accessibility</a>).
       Only metro stations report through this feed — bus, tram, and ferry accessibility status isn't covered here.
@@ -117,6 +136,179 @@
 
   <script type="module">
     import { fetchElevatorStatus, isOutOfService } from './elevatorStatus.js';
+
+    const LANGUAGES = [
+      { code: 'en', flag: '🇬🇧' },
+      { code: 'pt-PT', flag: '🇵🇹' },
+      { code: 'fr', flag: '🇫🇷' },
+      { code: 'es', flag: '🇪🇸' },
+      { code: 'de', flag: '🇩🇪' },
+      { code: 'pl', flag: '🇵🇱' },
+      { code: 'uk', flag: '🇺🇦' },
+    ];
+
+    const I18N = {
+      en: {
+        backLink: '← Back to trip planner',
+        pageTitle: 'Metro Lisboa elevator & escalator status',
+        pageSubtitle: "A public, unfiltered view of every elevator/escalator status reading Metro Lisboa's own live feed reports right now. No editorializing — this is the same data the trip planner uses to warn riders, shown in full so anyone can hold the network accountable for accessibility uptime.",
+        loading: 'Loading live status…',
+        refreshNote: 'Auto-refreshes every 60s',
+        outOneLabel: 'elevator/escalator reported out of service right now',
+        outManyLabel: 'elevators/escalators reported out of service right now',
+        updatedText: (t) => `Checked just now · station data last confirmed ${t}`,
+        emptyState: 'No outages reported. Every tracked elevator/escalator is currently operational.',
+        errorPrefix: 'Could not reach the live status feed',
+        thStation: 'Station', thOutages: 'Outages', thDetail: 'Detail',
+        downSuffix: 'down',
+        equipmentFallback: 'Equipment',
+        lineLabel: 'line',
+        footerNote: (link) => `Source: Metro Lisboa's live elevator/escalator status feed, polled automatically and stored in Firestore (see ${link}). Only metro stations report through this feed — bus, tram, and ferry accessibility status isn't covered here.`,
+      },
+      'pt-PT': {
+        backLink: '← Voltar ao planeador de viagens',
+        pageTitle: 'Estado dos elevadores e escadas rolantes do Metro de Lisboa',
+        pageSubtitle: 'Vista pública e sem filtros do estado de todos os elevadores/escadas rolantes reportado agora pelo próprio feed em tempo real do Metro de Lisboa. Sem editorialização — são os mesmos dados que o planeador usa para avisar os utilizadores, mostrados na íntegra para que qualquer pessoa possa responsabilizar a rede pela disponibilidade da acessibilidade.',
+        loading: 'A carregar estado em tempo real…',
+        refreshNote: 'Atualiza automaticamente a cada 60s',
+        outOneLabel: 'elevador/escada rolante reportado fora de serviço agora',
+        outManyLabel: 'elevadores/escadas rolantes reportados fora de serviço agora',
+        updatedText: (t) => `Verificado agora · dados da estação confirmados pela última vez ${t}`,
+        emptyState: 'Sem avarias reportadas. Todos os elevadores/escadas rolantes monitorizados estão atualmente operacionais.',
+        errorPrefix: 'Não foi possível aceder ao feed de estado em tempo real',
+        thStation: 'Estação', thOutages: 'Avarias', thDetail: 'Detalhe',
+        downSuffix: 'fora de serviço',
+        equipmentFallback: 'Equipamento',
+        lineLabel: 'linha',
+        footerNote: (link) => `Fonte: feed de estado dos elevadores/escadas rolantes do Metro de Lisboa, consultado automaticamente e guardado no Firestore (ver ${link}). Apenas as estações de metro reportam através deste feed — autocarro, elétrico e ferry não estão aqui cobertos.`,
+      },
+      fr: {
+        backLink: '← Retour au planificateur',
+        pageTitle: 'État des ascenseurs et escaliers mécaniques du Metro de Lisbonne',
+        pageSubtitle: "Vue publique et sans filtre de l'état de tous les ascenseurs/escaliers mécaniques signalé en ce moment par le flux en direct du Metro de Lisbonne lui-même. Sans éditorialisation — ce sont les mêmes données que le planificateur utilise pour avertir les usagers, montrées en intégralité pour que chacun puisse tenir le réseau responsable de la disponibilité de l'accessibilité.",
+        loading: 'Chargement du statut en direct…',
+        refreshNote: 'Actualisation automatique toutes les 60s',
+        outOneLabel: 'ascenseur/escalier mécanique signalé hors service en ce moment',
+        outManyLabel: 'ascenseurs/escaliers mécaniques signalés hors service en ce moment',
+        updatedText: (t) => `Vérifié à l'instant · données de la station confirmées pour la dernière fois ${t}`,
+        emptyState: 'Aucune panne signalée. Tous les ascenseurs/escaliers mécaniques suivis sont actuellement opérationnels.',
+        errorPrefix: "Impossible d'accéder au flux de statut en direct",
+        thStation: 'Station', thOutages: 'Pannes', thDetail: 'Détail',
+        downSuffix: 'hors service',
+        equipmentFallback: 'Équipement',
+        lineLabel: 'ligne',
+        footerNote: (link) => `Source : flux de statut des ascenseurs/escaliers mécaniques du Metro de Lisbonne, interrogé automatiquement et stocké dans Firestore (voir ${link}). Seules les stations de métro remontent ce flux — bus, tram et ferry ne sont pas couverts ici.`,
+      },
+      es: {
+        backLink: '← Volver al planificador',
+        pageTitle: 'Estado de ascensores y escaleras mecánicas del Metro de Lisboa',
+        pageSubtitle: 'Vista pública y sin filtrar del estado de todos los ascensores/escaleras mecánicas que reporta ahora mismo el propio feed en vivo del Metro de Lisboa. Sin editorializar — son los mismos datos que usa el planificador para avisar a los usuarios, mostrados en su totalidad para que cualquiera pueda exigir cuentas a la red sobre la disponibilidad de la accesibilidad.',
+        loading: 'Cargando estado en vivo…',
+        refreshNote: 'Se actualiza automáticamente cada 60s',
+        outOneLabel: 'ascensor/escalera mecánica reportado fuera de servicio ahora mismo',
+        outManyLabel: 'ascensores/escaleras mecánicas reportados fuera de servicio ahora mismo',
+        updatedText: (t) => `Comprobado ahora mismo · datos de la estación confirmados por última vez ${t}`,
+        emptyState: 'Sin averías reportadas. Todos los ascensores/escaleras mecánicas monitorizados están actualmente operativos.',
+        errorPrefix: 'No se pudo acceder al feed de estado en vivo',
+        thStation: 'Estación', thOutages: 'Averías', thDetail: 'Detalle',
+        downSuffix: 'fuera de servicio',
+        equipmentFallback: 'Equipo',
+        lineLabel: 'línea',
+        footerNote: (link) => `Fuente: feed de estado de ascensores/escaleras mecánicas del Metro de Lisboa, consultado automáticamente y guardado en Firestore (ver ${link}). Solo las estaciones de metro reportan a través de este feed — autobús, tranvía y ferry no están cubiertos aquí.`,
+      },
+      de: {
+        backLink: '← Zurück zum Routenplaner',
+        pageTitle: 'Status der Aufzüge und Rolltreppen der Metro Lisboa',
+        pageSubtitle: 'Eine öffentliche, ungefilterte Ansicht des Status aller Aufzüge/Rolltreppen, die gerade vom Live-Feed der Metro Lisboa selbst gemeldet werden. Ohne Beschönigung — dieselben Daten, die der Routenplaner zur Warnung nutzt, vollständig gezeigt, damit jeder das Netz für die Verfügbarkeit der Barrierefreiheit zur Rechenschaft ziehen kann.',
+        loading: 'Live-Status wird geladen…',
+        refreshNote: 'Aktualisiert sich automatisch alle 60s',
+        outOneLabel: 'Aufzug/Rolltreppe gerade als außer Betrieb gemeldet',
+        outManyLabel: 'Aufzüge/Rolltreppen gerade als außer Betrieb gemeldet',
+        updatedText: (t) => `Gerade geprüft · Stationsdaten zuletzt bestätigt ${t}`,
+        emptyState: 'Keine Störungen gemeldet. Alle erfassten Aufzüge/Rolltreppen sind derzeit betriebsbereit.',
+        errorPrefix: 'Live-Status-Feed nicht erreichbar',
+        thStation: 'Station', thOutages: 'Störungen', thDetail: 'Details',
+        downSuffix: 'außer Betrieb',
+        equipmentFallback: 'Gerät',
+        lineLabel: 'Linie',
+        footerNote: (link) => `Quelle: Live-Status-Feed der Aufzüge/Rolltreppen der Metro Lisboa, automatisch abgefragt und in Firestore gespeichert (siehe ${link}). Nur U-Bahn-Stationen melden über diesen Feed — Bus, Straßenbahn und Fähre sind hier nicht erfasst.`,
+      },
+      pl: {
+        backLink: '← Powrót do planera podróży',
+        pageTitle: 'Status wind i schodów ruchomych metra w Lizbonie',
+        pageSubtitle: 'Publiczny, nieprzefiltrowany widok stanu wszystkich wind/schodów ruchomych zgłaszanego właśnie przez własny kanał na żywo metra w Lizbonie. Bez upiększania — to te same dane, których planer używa do ostrzegania pasażerów, pokazane w całości, aby każdy mógł rozliczać sieć z dostępności.',
+        loading: 'Ładowanie statusu na żywo…',
+        refreshNote: 'Automatyczne odświeżanie co 60s',
+        outOneLabel: 'winda/schody ruchome zgłoszone jako niedziałające teraz',
+        outManyLabel: 'wind/schodów ruchomych zgłoszonych jako niedziałające teraz',
+        updatedText: (t) => `Sprawdzono przed chwilą · dane stacji ostatnio potwierdzone ${t}`,
+        emptyState: 'Brak zgłoszonych awarii. Wszystkie monitorowane windy/schody ruchome są obecnie sprawne.',
+        errorPrefix: 'Nie udało się połączyć z kanałem statusu na żywo',
+        thStation: 'Stacja', thOutages: 'Awarie', thDetail: 'Szczegóły',
+        downSuffix: 'niedziałające',
+        equipmentFallback: 'Urządzenie',
+        lineLabel: 'linia',
+        footerNote: (link) => `Źródło: kanał statusu wind/schodów ruchomych metra w Lizbonie, odpytywany automatycznie i zapisywany w Firestore (zob. ${link}). Tylko stacje metra raportują przez ten kanał — autobus, tramwaj i prom nie są tu ujęte.`,
+      },
+      uk: {
+        backLink: '← Назад до планувальника',
+        pageTitle: 'Стан ліфтів та ескалаторів метро Лісабона',
+        pageSubtitle: 'Публічний, нефільтрований перегляд стану всіх ліфтів/ескалаторів, який зараз повідомляє власний потік метро Лісабона в реальному часі. Без прикрас — це ті самі дані, які планувальник використовує для попереджень, показані повністю, щоб кожен міг вимагати від мережі відповідальності за доступність.',
+        loading: 'Завантаження стану в реальному часі…',
+        refreshNote: 'Автооновлення кожні 60с',
+        outOneLabel: 'ліфт/ескалатор наразі повідомлено як несправний',
+        outManyLabel: 'ліфтів/ескалаторів наразі повідомлено як несправні',
+        updatedText: (t) => `Перевірено щойно · дані станції востаннє підтверджено ${t}`,
+        emptyState: 'Несправностей не повідомлено. Усі відстежувані ліфти/ескалатори наразі працюють.',
+        errorPrefix: 'Не вдалося отримати доступ до потоку стану в реальному часі',
+        thStation: 'Станція', thOutages: 'Несправності', thDetail: 'Деталі',
+        downSuffix: 'несправно',
+        equipmentFallback: 'Обладнання',
+        lineLabel: 'лінія',
+        footerNote: (link) => `Джерело: потік стану ліфтів/ескалаторів метро Лісабона, автоматично опитуваний і збережений у Firestore (див. ${link}). Лише станції метро повідомляють через цей потік — автобус, трамвай і паром тут не охоплені.`,
+      },
+    };
+
+    let currentLang = 'en';
+
+    function detectLanguage() {
+      const stored = localStorage.getItem('lisbonTransit.lang');
+      if (stored && I18N[stored]) return stored;
+      const nav = (navigator.language || '').toLowerCase();
+      const match = LANGUAGES.find((l) => nav.startsWith(l.code.toLowerCase().split('-')[0]));
+      return match ? match.code : 'en';
+    }
+
+    function applyLanguage(code) {
+      if (!I18N[code]) code = 'en';
+      currentLang = code;
+      localStorage.setItem('lisbonTransit.lang', code);
+      const t = I18N[code];
+
+      document.getElementById('back-link').textContent = t.backLink;
+      document.getElementById('page-title').textContent = t.pageTitle;
+      document.getElementById('page-subtitle').textContent = t.pageSubtitle;
+      document.getElementById('refresh-note').textContent = t.refreshNote;
+
+      const link = `<a href="https://github.com/devotedpronet-cyber/transit-accessibility" style="color:inherit">devotedpronet-cyber/transit-accessibility</a>`;
+      document.getElementById('footer-note').innerHTML = t.footerNote(link);
+
+      document.querySelectorAll('.lang-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.code === code);
+      });
+
+      render();
+    }
+
+    function buildLangRow() {
+      const row = document.getElementById('lang-row');
+      row.innerHTML = LANGUAGES.map((l) =>
+        `<button class="lang-btn" data-code="${l.code}" title="${l.code}">${l.flag}</button>`
+      ).join('');
+      row.querySelectorAll('.lang-btn').forEach((btn) => {
+        btn.addEventListener('click', () => applyLanguage(btn.dataset.code));
+      });
+    }
 
     function escapeHtml(str) {
       const div = document.createElement('div');
@@ -150,6 +342,7 @@
     let wasZero = false;
 
     async function render() {
+      const t = I18N[currentLang];
       const headlineNumber = document.getElementById('headline-number');
       const headlineLabel = document.getElementById('headline-label');
       const updated = document.getElementById('updated');
@@ -160,7 +353,7 @@
         rows = await fetchElevatorStatus();
       } catch (err) {
         headlineNumber.textContent = '⚠';
-        headlineLabel.textContent = 'Could not reach the live status feed';
+        headlineLabel.textContent = t.errorPrefix;
         content.innerHTML = `<div class="error-state">${escapeHtml(err.message || String(err))}</div>`;
         return;
       }
@@ -170,13 +363,11 @@
 
       headlineNumber.textContent = `${outages.length} / ${total}`;
       headlineNumber.className = 'headline-number ' + (outages.length > 0 ? 'danger' : 'ok');
-      headlineLabel.textContent = outages.length === 1
-        ? 'elevator/escalator reported out of service right now'
-        : 'elevators/escalators reported out of service right now';
-      updated.textContent = `Checked just now · station data last confirmed ${formatTimestamp(rows[0]?.lastChecked)}`;
+      headlineLabel.textContent = outages.length === 1 ? t.outOneLabel : t.outManyLabel;
+      updated.textContent = t.updatedText(formatTimestamp(rows[0]?.lastChecked));
 
       if (outages.length === 0) {
-        content.innerHTML = '<div class="empty-state">No outages reported. Every tracked elevator/escalator is currently operational.</div>';
+        content.innerHTML = `<div class="empty-state">${escapeHtml(t.emptyState)}</div>`;
         if (!wasZero) celebrateZeroOutages();
         wasZero = true;
         return;
@@ -194,22 +385,23 @@
         .sort((a, b) => b[1].length - a[1].length)
         .map(([station, items]) => `
           <tr>
-            <td class="station-name">${escapeHtml(station)}${items[0]?.line ? `<br><small style="color:var(--text-secondary)">${escapeHtml(items[0].line)} line</small>` : ''}</td>
-            <td><span class="badge">${items.length} down</span></td>
-            <td>${items.map((i) => escapeHtml(i.equipment || 'Equipment') + (i.location ? ` — ${escapeHtml(i.location)}` : '')).join('<br>')}</td>
+            <td class="station-name">${escapeHtml(station)}${items[0]?.line ? `<br><small style="color:var(--text-secondary)">${escapeHtml(items[0].line)} ${escapeHtml(t.lineLabel)}</small>` : ''}</td>
+            <td><span class="badge">${items.length} ${escapeHtml(t.downSuffix)}</span></td>
+            <td>${items.map((i) => escapeHtml(i.equipment || t.equipmentFallback) + (i.location ? ` — ${escapeHtml(i.location)}` : '')).join('<br>')}</td>
           </tr>
         `)
         .join('');
 
       content.innerHTML = `
         <table>
-          <thead><tr><th>Station</th><th>Outages</th><th>Detail</th></tr></thead>
+          <thead><tr><th>${escapeHtml(t.thStation)}</th><th>${escapeHtml(t.thOutages)}</th><th>${escapeHtml(t.thDetail)}</th></tr></thead>
           <tbody>${stationRows}</tbody>
         </table>
       `;
     }
 
-    render();
+    buildLangRow();
+    applyLanguage(detectLanguage());
     setInterval(render, 60000);
   </script>
 </body>
