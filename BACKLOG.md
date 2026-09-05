@@ -4,6 +4,8 @@ Open work on the Lisbon Transit Accessibility Planner. Each item links to its tr
 
 ## 🙋 Help wanted: backend
 
+🇵🇹 *Ver também em português: [CONTRIBUTING.pt-PT.md](CONTRIBUTING.pt-PT.md#-ajuda-pedida-backend)*
+
 The app is currently a static frontend (GH Pages) plus Firestore and a free GitHub Actions poller — no paid Cloud Functions yet. That's the ceiling blocking Phase 5.5 below, which needs a small routing service for sidewalk/curb-cut pathfinding. If you can build Firebase Functions / Cloud Run pieces, or help cover Blaze-tier cost if usage grows, this is the single highest-leverage way to unstick the project. Open an issue or comment on #6 to pick this up.
 
 ## Phase 5 — data & routing
