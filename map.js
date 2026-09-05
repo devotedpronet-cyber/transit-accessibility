@@ -2,7 +2,7 @@
 // Metropolitana API, honest accessibility labeling — see stops.js header).
 
 import { loadStops } from './stops.js';
-import { colorForAccessibility, labelForAccessibility } from './mapColors.js';
+import { colorForAccessibility, labelForAccessibility, iconForMode, labelForMode } from './mapColors.js';
 import { fetchElevatorStatus, outagesForStop, outageWarning } from './elevatorStatus.js';
 
 let map;
@@ -53,8 +53,8 @@ function renderStops() {
     const lines = stop.lines ? `<br/><small>Lines: ${stop.lines}</small>` : '';
     const outage = warning ? `<br/><small>⚠ ${warning}</small>` : '';
     marker.bindPopup(`
-      <b>${stop.name}</b><br/>
-      <small>${labelForAccessibility(stop.accessibility)}</small>${lines}${outage}
+      <b>${iconForMode(stop.mode)} ${stop.name}</b><br/>
+      <small>${labelForMode(stop.mode)} · ${labelForAccessibility(stop.accessibility)}</small>${lines}${outage}
     `);
 
     markers.push(marker);
