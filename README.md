@@ -1,5 +1,7 @@
 # Lisbon Transit Accessibility Planner
 
+🇵🇹 [Ler em português](README.pt-PT.md)
+
 ## Contributing
 
 This is a civic-tech project and outside contributors are welcome. See [BACKLOG.md](BACKLOG.md) for open work and [CONTRIBUTING.md](CONTRIBUTING.md) for how to get started.

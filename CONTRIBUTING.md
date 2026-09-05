@@ -1,5 +1,7 @@
 # Contributing
 
+🇵🇹 [Ler em português](CONTRIBUTING.pt-PT.md)
+
 Thanks for considering a contribution to the Lisbon Transit Accessibility Planner.
 
 ## Project scope
