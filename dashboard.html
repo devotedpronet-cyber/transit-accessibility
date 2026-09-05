@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metro Lisboa Elevator Status — Accountability Dashboard</title>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --panel: #161616;
+    --border: #2a2a2a;
+    --text: #f2f2f2;
+    --text-secondary: #a0a0a0;
+    --danger: #ff453a;
+    --ok: #34c759;
+    --primary: #0a84ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px 16px 60px;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .subtitle { color: var(--text-secondary); font-size: 13px; margin: 0 0 24px; line-height: 1.4; }
+  .back-link { display: inline-block; font-size: 13px; color: var(--primary); text-decoration: none; margin-bottom: 20px; }
+  .headline {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .headline-number { font-size: 40px; font-weight: 700; }
+  .headline-number.danger { color: var(--danger); }
+  .headline-number.ok { color: var(--ok); }
+  .headline-label { color: var(--text-secondary); font-size: 13px; margin-top: 4px; }
+  .updated { color: var(--text-secondary); font-size: 11px; margin-top: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-secondary); font-weight: 500; font-size: 12px; }
+  tr:last-child td { border-bottom: none; }
+  .station-name { font-weight: 600; }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(255, 69, 58, 0.15);
+    color: var(--danger);
+  }
+  .empty-state {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 40px 16px;
+    font-size: 14px;
+  }
+  .error-state {
+    text-align: center;
+    color: var(--danger);
+    padding: 20px 16px;
+    font-size: 13px;
+  }
+  .footer-note {
+    color: var(--text-secondary);
+    font-size: 11px;
+    margin-top: 28px;
+    line-height: 1.5;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back-link" href="index.html">← Back to trip planner</a>
+    <h1>Metro Lisboa elevator &amp; escalator status</h1>
+    <p class="subtitle">
+      A public, unfiltered view of every elevator/escalator status reading Metro Lisboa's own live feed reports right now.
+      No editorializing — this is the same data the trip planner uses to warn riders, shown in full so anyone can hold the network accountable for accessibility uptime.
+    </p>
+
+    <div class="headline" id="headline">
+      <div class="headline-number" id="headline-number">—</div>
+      <div class="headline-label" id="headline-label">Loading live status…</div>
+      <div class="updated" id="updated"></div>
+    </div>
+
+    <div id="content"></div>
+
+    <p class="footer-note">
+      Source: Metro Lisboa's live elevator/escalator status feed, polled automatically and stored in Firestore (see
+      <a href="https://github.com/devotedpronet-cyber/transit-accessibility" style="color:inherit">devotedpronet-cyber/transit-accessibility</a>).
+      Only metro stations report through this feed — bus, tram, and ferry accessibility status isn't covered here.
+    </p>
+  </div>
+
+  <script type="module">
+    import { fetchElevatorStatus, isOutOfService } from './elevatorStatus.js';
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str ?? '';
+      return div.innerHTML;
+    }
+
+    function formatTimestamp(iso) {
+      if (!iso) return 'unknown time';
+      try {
+        return new Date(iso).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+      } catch {
+        return iso;
+      }
+    }
+
+    async function render() {
+      const headlineNumber = document.getElementById('headline-number');
+      const headlineLabel = document.getElementById('headline-label');
+      const updated = document.getElementById('updated');
+      const content = document.getElementById('content');
+
+      let rows;
+      try {
+        rows = await fetchElevatorStatus();
+      } catch (err) {
+        headlineNumber.textContent = '⚠';
+        headlineLabel.textContent = 'Could not reach the live status feed';
+        content.innerHTML = `<div class="error-state">${escapeHtml(err.message || String(err))}</div>`;
+        return;
+      }
+
+      const outages = rows.filter(isOutOfService);
+      const total = rows.length;
+
+      headlineNumber.textContent = `${outages.length} / ${total}`;
+      headlineNumber.className = 'headline-number ' + (outages.length > 0 ? 'danger' : 'ok');
+      headlineLabel.textContent = outages.length === 1
+        ? 'elevator/escalator reported out of service right now'
+        : 'elevators/escalators reported out of service right now';
+      updated.textContent = `Checked just now · station data last confirmed ${formatTimestamp(rows[0]?.lastChecked)}`;
+
+      if (outages.length === 0) {
+        content.innerHTML = '<div class="empty-state">No outages reported. Every tracked elevator/escalator is currently operational.</div>';
+        return;
+      }
+
+      const byStation = new Map();
+      for (const row of outages) {
+        const key = row.station || 'Unknown station';
+        if (!byStation.has(key)) byStation.set(key, []);
+        byStation.get(key).push(row);
+      }
+
+      const stationRows = [...byStation.entries()]
+        .sort((a, b) => b[1].length - a[1].length)
+        .map(([station, items]) => `
+          <tr>
+            <td class="station-name">${escapeHtml(station)}${items[0]?.line ? `<br><small style="color:var(--text-secondary)">${escapeHtml(items[0].line)} line</small>` : ''}</td>
+            <td><span class="badge">${items.length} down</span></td>
+            <td>${items.map((i) => escapeHtml(i.equipment || 'Equipment') + (i.location ? ` — ${escapeHtml(i.location)}` : '')).join('<br>')}</td>
+          </tr>
+        `)
+        .join('');
+
+      content.innerHTML = `
+        <table>
+          <thead><tr><th>Station</th><th>Outages</th><th>Detail</th></tr></thead>
+          <tbody>${stationRows}</tbody>
+        </table>
+      `;
+    }
+
+    render();
+  </script>
+</body>
+</html>
