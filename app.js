@@ -6,6 +6,8 @@
 // accessibility label ('known-accessible' | 'unknown') and callers decide
 // how to present that.
 
+import { outagesForStop, outageWarning } from './elevatorStatus.js';
+
 export function getDistance(lat1, lon1, lat2, lon2) {
   const toRad = (deg) => (deg * Math.PI) / 180;
   const R = 6371; // Earth radius in km
@@ -65,7 +67,10 @@ export function nearestAccessibleStop(stops, lat, lon) {
     .sort((a, b) => a.distance - b.distance)[0];
 }
 
-export function formatResults(stops) {
+// elevatorRows is optional live status data (see elevatorStatus.js); when
+// omitted, results render exactly as before — a backend outage never breaks
+// the core nearby-stops flow.
+export function formatResults(stops, elevatorRows) {
   if (!stops || stops.length === 0) {
     return "No stops found within 2km.";
   }
@@ -73,7 +78,11 @@ export function formatResults(stops) {
     .map((stop) => {
       const badge = stop.accessibility === 'known-accessible' ? 'Accessible' : 'Accessibility unknown';
       const lines = stop.lines ? ` - Lines: ${stop.lines}` : '';
-      return `${stop.name} (${stop.distance.toFixed(2)}km) - ${badge}${lines}`;
+      const warning = elevatorRows
+        ? outageWarning(outagesForStop(stop, elevatorRows))
+        : null;
+      const outage = warning ? ` - ⚠ ${warning}` : '';
+      return `${stop.name} (${stop.distance.toFixed(2)}km) - ${badge}${lines}${outage}`;
     })
     .join("\n");
 }
