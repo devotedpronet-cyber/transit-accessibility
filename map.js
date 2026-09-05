@@ -37,7 +37,9 @@ function renderStops() {
   markers.forEach(m => map.removeLayer(m));
   markers = [];
 
-  stops.forEach(stop => {
+  // Only render confirmed-accessible stops — matches the app's own claim
+  // that unconfirmed stops stay hidden instead of implying access.
+  stops.filter(stop => stop.accessibility === 'known-accessible').forEach(stop => {
     const warning = outageWarning(outagesForStop(stop, elevatorRows));
     const fillColor = warning ? '#FF9500' : colorForAccessibility(stop.accessibility);
 
