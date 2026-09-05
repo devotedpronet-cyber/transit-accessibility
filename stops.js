@@ -51,6 +51,16 @@ const CACHE_TTL = 24 * 60 * 60 * 1000; // 24h — live API, no need for a stale 
 // is the subset of those 47 we could positively confirm by name from Metro's own site —
 // not the full 47. Extend it if a full official roster surfaces.
 //
+// CONFIRMED NOT YET ACCESSIBLE (checked 2026-09-05, two independent sources): Anjos,
+// Avenida, Parque, Jardim Zoológico, Laranjeiras, Alto dos Moinhos. Metro's own official
+// network diagram (metrolisboa.pt, "Rede do Metropolitano de Lisboa • mobilidade
+// reduzida", uploaded 2026-01) shows no elevator icon at these 6 stations, and a
+// 2026-03 lisboaparapessoas.pt article on the Green/Blue line elevator rollout confirms
+// they're still pending installation (Anjos itself not expected complete until 2027).
+// These are correctly left out of this list — not merely unconfirmed, but positively
+// known to lack step-free access right now. Re-check before 2027 in case of an
+// early completion.
+//
 // KNOWN DISAGREEMENT (OSM cross-validation, 2026-09-02, Overpass query against
 // node["station"="subway"]): OSM's wheelchair=* tag says 'no' for Colégio Militar/Luz
 // and Campo Pequeno, contradicting Metro's own accessible-list below. Kept as
