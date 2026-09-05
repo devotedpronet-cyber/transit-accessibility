@@ -139,8 +139,16 @@ const ACCESSIBLE_FERRY_TERMINALS = [
   { name: 'Estação Fluvial da Trafaria', lat: 38.6742699, lon: -9.2312151 },
 ];
 
+// mode is assigned by which curated array a stop came from — never inferred
+// from its name. A prior name-substring heuristic across the merged Carris
+// data was tried and rejected (false positives: "...ESTACIONA" matched as
+// parking, bus stops near train stations mislabeled as rail — see issue #7).
+// This differs from that: ACCESSIBLE_METRO_STATIONS/ACCESSIBLE_FERRY_TERMINALS
+// are our own curated overlays, so the source array itself is ground truth.
 function accessibleOverlayStops() {
-  return [...ACCESSIBLE_METRO_STATIONS, ...ACCESSIBLE_FERRY_TERMINALS].map((s, i) => ({
+  const metro = ACCESSIBLE_METRO_STATIONS.map(s => ({ ...s, mode: 'metro' }));
+  const ferry = ACCESSIBLE_FERRY_TERMINALS.map(s => ({ ...s, mode: 'ferry' }));
+  return [...metro, ...ferry].map((s, i) => ({
     id: `accessible_overlay_${i}`,
     name: s.name,
     lat: s.lat,
@@ -148,17 +156,18 @@ function accessibleOverlayStops() {
     accessibility: 'known-accessible',
     municipality: 'Lisboa',
     lines: '',
+    mode: s.mode,
   }));
 }
 
 // Curated fallback used only if the live API is unreachable (offline dev, API outage).
 // Clearly labeled as a fixture, not presented as live data.
 const FIXTURE_STOPS = [
-  { id: 'fixture_1', name: 'Rossio', lat: 38.7136, lon: -9.1395, accessibility: 'unknown', municipality: 'Lisboa' },
-  { id: 'fixture_2', name: 'Marquês de Pombal', lat: 38.7248, lon: -9.1499, accessibility: 'unknown', municipality: 'Lisboa' },
-  { id: 'fixture_3', name: 'Cais do Sodré', lat: 38.7065, lon: -9.1454, accessibility: 'unknown', municipality: 'Lisboa' },
-  { id: 'fixture_4', name: 'Baixa-Chiado', lat: 38.7106, lon: -9.1397, accessibility: 'unknown', municipality: 'Lisboa' },
-  { id: 'fixture_5', name: 'Oriente', lat: 38.7679, lon: -9.0987, accessibility: 'unknown', municipality: 'Lisboa' },
+  { id: 'fixture_1', name: 'Rossio', lat: 38.7136, lon: -9.1395, accessibility: 'unknown', municipality: 'Lisboa', mode: 'bus' },
+  { id: 'fixture_2', name: 'Marquês de Pombal', lat: 38.7248, lon: -9.1499, accessibility: 'unknown', municipality: 'Lisboa', mode: 'bus' },
+  { id: 'fixture_3', name: 'Cais do Sodré', lat: 38.7065, lon: -9.1454, accessibility: 'unknown', municipality: 'Lisboa', mode: 'bus' },
+  { id: 'fixture_4', name: 'Baixa-Chiado', lat: 38.7106, lon: -9.1397, accessibility: 'unknown', municipality: 'Lisboa', mode: 'bus' },
+  { id: 'fixture_5', name: 'Oriente', lat: 38.7679, lon: -9.0987, accessibility: 'unknown', municipality: 'Lisboa', mode: 'bus' },
 ];
 
 export async function loadStops() {
@@ -200,6 +209,11 @@ async function fetchFromCarrisMetropolitana() {
         : 'unknown',
       municipality: s.municipality_name || '',
       lines: (s.line_ids || []).map(id => lineLabelById.get(id)).filter(Boolean).join(', '),
+      // Carris Metropolitana's entire fleet is buses — no tram/rail service under
+      // this brand (confirmed live: /v2/lines and /v2/vehicles carry no mode field
+      // because there's only one mode). Not a heuristic — every stop from this feed
+      // is a bus stop by definition of what Carris Metropolitana operates.
+      mode: 'bus',
     }));
 }
 

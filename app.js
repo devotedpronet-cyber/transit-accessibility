@@ -7,6 +7,7 @@
 // how to present that.
 
 import { outagesForStop, outageWarning } from './elevatorStatus.js';
+import { iconForMode } from './mapColors.js';
 
 export function getDistance(lat1, lon1, lat2, lon2) {
   const toRad = (deg) => (deg * Math.PI) / 180;
@@ -82,7 +83,7 @@ export function formatResults(stops, elevatorRows) {
         ? outageWarning(outagesForStop(stop, elevatorRows))
         : null;
       const outage = warning ? ` - ⚠ ${warning}` : '';
-      return `${stop.name} (${stop.distance.toFixed(2)}km) - ${badge}${lines}${outage}`;
+      return `${iconForMode(stop.mode)} ${stop.name} (${stop.distance.toFixed(2)}km) - ${badge}${lines}${outage}`;
     })
     .join("\n");
 }

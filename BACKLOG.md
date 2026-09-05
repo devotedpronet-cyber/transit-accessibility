@@ -20,7 +20,7 @@ The app is currently a static frontend (GH Pages) plus Firestore and a free GitH
 
 ([#7](https://github.com/devotedpronet-cyber/transit-accessibility/issues/7))
 
-- [ ] Mode-of-transport marker difference (bus/tram/metro/rail/ferry) — needs real per-mode feed data or an explicit `mode` field; a substring name-heuristic was tried and rejected (false positives), don't repeat that approach.
+- [x] Mode-of-transport marker difference (bus/metro/ferry) — shipped via `mode` field assigned at the source-array level (Carris feed → bus, metro/ferry overlays → metro/ferry), not name-heuristic. See PR [#22](https://github.com/devotedpronet-cyber/transit-accessibility/pull/22).
 - [ ] Full official roster of all 47 accessible Metro stations — 21/47 confirmed by name so far in `stops.js`'s `ACCESSIBLE_METRO_STATIONS`.
 - [ ] Pedrouços/Algés ferry terminal accessibility — unconfirmed, kept out of the overlay until real data exists.
 

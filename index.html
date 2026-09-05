@@ -589,6 +589,7 @@
   <script type="module">
     import { findNearestStops, nearestAccessibleStop } from "./app.js";
     import { initMap, getStops } from "./map.js";
+    import { iconForMode } from "./mapColors.js";
 
     window.origin = null;
     window.destination = null;
@@ -1325,7 +1326,7 @@
       const lines = stop.lines ? `<div class="stop-lines">${escapeHtml(stop.lines)}</div>` : '';
       return `
         <div class="stop">
-          <div class="stop-name">${escapeHtml(stop.name)}</div>
+          <div class="stop-name">${iconForMode(stop.mode)} ${escapeHtml(stop.name)}</div>
           <div class="stop-distance">${t.kmAwaySuffix.replace('{km}', stop.distance.toFixed(2))}</div>
           <div class="stop-badge ${badgeClass}">${badgeText}</div>
           ${lines}
