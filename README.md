@@ -1,5 +1,9 @@
 # Lisbon Transit Accessibility Planner
 
+## Contributing
+
+This is a civic-tech project and outside contributors are welcome. See [BACKLOG.md](BACKLOG.md) for open work and [CONTRIBUTING.md](CONTRIBUTING.md) for how to get started.
+
 ## Problem
 
 Lisbon's public transit system lacks clear accessibility information. Most GTFS feeds in the Lisbon area (Carris Metropolitana, 12,752 stops) simply don't carry reliable stop-level wheelchair data — only 19 metro stations and 10 ferry terminals have a confirmed "accessible" flag. Current transit apps don't surface that honestly, leaving users unable to confidently plan their journeys.
