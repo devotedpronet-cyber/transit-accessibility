@@ -4,14 +4,14 @@ Open work on the Lisbon Transit Accessibility Planner. Each item links to its tr
 
 ## 🙋 Help wanted: backend
 
-The app is currently a static frontend (GH Pages) plus Firestore and a free GitHub Actions poller — no paid Cloud Functions yet. That's the ceiling blocking Phase 5.4 and 5.5 below: both need real server-side work (wiring live Firestore reads into the UI, and eventually a small routing service for sidewalk/curb-cut pathfinding). If you can build Firebase Functions / Cloud Run pieces, or help cover Blaze-tier cost if usage grows, this is the single highest-leverage way to unstick the project. Open an issue or comment on #5 / #6 to pick this up.
+The app is currently a static frontend (GH Pages) plus Firestore and a free GitHub Actions poller — no paid Cloud Functions yet. That's the ceiling blocking Phase 5.5 below, which needs a small routing service for sidewalk/curb-cut pathfinding. If you can build Firebase Functions / Cloud Run pieces, or help cover Blaze-tier cost if usage grows, this is the single highest-leverage way to unstick the project. Open an issue or comment on #6 to pick this up.
 
 ## Phase 5 — data & routing
 
 - [ ] **Phase 5.1: Willeasy accessible-metro data partnership** ([#2](https://github.com/devotedpronet-cyber/transit-accessibility/issues/2)) — no public API/export exists (CC BY-ND license blocks scraping/reformatting anyway); needs a direct partnership ask to `info@willeasy.net`.
 - [ ] **Phase 5.2: OSM/GTFS accessibility cross-validation** ([#3](https://github.com/devotedpronet-cyber/transit-accessibility/issues/3)) — 161/12,752 stops cross-confirmed so far via geo-fuzzy match; 116 unmatched OSM nodes and 26 metro stations still open.
 - [x] **Phase 5.3: Live elevator/escalator status backend** — shipped (GitHub Actions poller, see commit history).
-- [ ] **Phase 5.4: Outage-aware trip warnings** ([#5](https://github.com/devotedpronet-cyber/transit-accessibility/issues/5)) — wire Firestore elevator-status reads into `app.js`/`map.js` results render.
+- [x] **Phase 5.4: Outage-aware trip warnings** — shipped (live Firestore elevator-status reads wired into `app.js`/`map.js`, see commit history).
 - [ ] **Phase 5.5: Last-mile sidewalk/curb-cut routing** ([#6](https://github.com/devotedpronet-cyber/transit-accessibility/issues/6)) — biggest lift, its own phase; prototype OpenSidewalks + `ngraph.path` A* over one pilot stop cluster first.
 
 ## Persistent backlog
