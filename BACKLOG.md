@@ -21,7 +21,7 @@ The app is currently a static frontend (GH Pages) plus Firestore and a free GitH
 ([#7](https://github.com/devotedpronet-cyber/transit-accessibility/issues/7))
 
 - [x] Mode-of-transport marker difference (bus/metro/ferry) — shipped via `mode` field assigned at the source-array level (Carris feed → bus, metro/ferry overlays → metro/ferry), not name-heuristic. See PR [#22](https://github.com/devotedpronet-cyber/transit-accessibility/pull/22).
-- [ ] Full official roster of all 47 accessible Metro stations — 21/47 confirmed by name so far in `stops.js`'s `ACCESSIBLE_METRO_STATIONS`.
+- [ ] Full official roster of all 47 accessible Metro stations — 41/47 confirmed by name so far in `stops.js`'s `ACCESSIBLE_METRO_STATIONS`. 6 of the remaining stations (Anjos, Avenida, Parque, Jardim Zoológico, Laranjeiras, Alto dos Moinhos) are now positively confirmed *not yet* accessible (two independent 2026 sources, see comment in `stops.js`) rather than merely unconfirmed — the true gap is closed.
 - [ ] Pedrouços/Algés ferry terminal accessibility — unconfirmed, kept out of the overlay until real data exists.
 
 ## Moonshots (untriaged)
