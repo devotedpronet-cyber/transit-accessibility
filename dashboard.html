@@ -73,6 +73,21 @@
     border-top: 1px solid var(--border);
     padding-top: 16px;
   }
+  .confetti {
+    position: fixed;
+    top: -20px;
+    font-size: 18px;
+    pointer-events: none;
+    animation: fall linear forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(100vh) rotate(360deg); opacity: 0.3; }
+  }
+  .refresh-note {
+    color: var(--text-secondary);
+    font-size: 11px;
+    margin-top: 6px;
+  }
 </style>
 </head>
 <body>
@@ -88,6 +103,7 @@
       <div class="headline-number" id="headline-number">—</div>
       <div class="headline-label" id="headline-label">Loading live status…</div>
       <div class="updated" id="updated"></div>
+      <div class="refresh-note">Auto-refreshes every 60s</div>
     </div>
 
     <div id="content"></div>
@@ -117,6 +133,22 @@
       }
     }
 
+    function celebrateZeroOutages() {
+      const emoji = ['🎉', '♿', '✅', '🎊'];
+      for (let i = 0; i < 24; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti';
+        piece.textContent = emoji[i % emoji.length];
+        piece.style.left = `${Math.random() * 100}vw`;
+        piece.style.animationDuration = `${2 + Math.random() * 2}s`;
+        piece.style.animationDelay = `${Math.random() * 0.5}s`;
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 5000);
+      }
+    }
+
+    let wasZero = false;
+
     async function render() {
       const headlineNumber = document.getElementById('headline-number');
       const headlineLabel = document.getElementById('headline-label');
@@ -145,8 +177,11 @@
 
       if (outages.length === 0) {
         content.innerHTML = '<div class="empty-state">No outages reported. Every tracked elevator/escalator is currently operational.</div>';
+        if (!wasZero) celebrateZeroOutages();
+        wasZero = true;
         return;
       }
+      wasZero = false;
 
       const byStation = new Map();
       for (const row of outages) {
@@ -175,6 +210,7 @@
     }
 
     render();
+    setInterval(render, 60000);
   </script>
 </body>
 </html>
