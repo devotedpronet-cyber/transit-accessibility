@@ -117,31 +117,13 @@ Make transit-accessibility-planner into real iOS-first web app. Real GPS. Mobile
 
 ## Phase 5: Competitive Expansion (post-launch)
 
-Puts the 5 ranked candidates from backlog above in order. Moonshots stay unscheduled — no feasibility triage yet. Each subsection: goal + first concrete step; full task breakdown come when phase really start, like usual.
+Full detail moved to GitHub issues (research writeups were bloating this file):
 
-### 5.1 Willeasy Integration
-Goal: close 47-station accessible-metro gap (now 15/47 confirmed) with real source, not hand confirmation.
-- [x] First step: checked Willeasy (willeasy.net) for direct data export/API — **not usable off-the-shelf**. Run by Willeasy S.r.l. (Italy), consumer map/search + crowdsource app only, no public API/dataset/export anywhere on site or in press. Content licensed CC BY-ND 4.0 (attribution + **no derivatives** — block reformat into our own DB even if we got data). Station coverage vs. our 47 unconfirmed. Verdict: **(b) needs partnership** — closing gap need direct email to `info@willeasy.net` to talk data access/ND-license exception, not self-serve integration. (Investigated 2026-09-02.)
-- [ ] Next step: send partnership ask to Willeasy, or fall back to 5.2 (OSM/GTFS Pathways) as the real near-term path to shrink gap while waiting on Willeasy answer (if any).
-
-### 5.2 OSM / GTFS Pathways Cross-Validation
-Goal: shrink `unknown` bucket and cross-check Carris own accessibility claims, no backend cost (reads only).
-- [x] First step: prototyped Overpass API query (`node["station"="subway"]` in Lisbon bbox, 46 stations found) and diffed `wheelchair=*` tags against `stops.js`'s `ACCESSIBLE_METRO_STATIONS`. Results: OSM say 11 stations `wheelchair=yes`, 5 `limited`, 4 `no`, 26 untagged. **6 new-confirmed stations not in our list** (Aeroporto, Ameixoeira, Chelas, Odivelas, Restauradores, Santa Apolónia) — added to `stops.js`, confirmed total now 21/47. **2 fights found**: OSM say `wheelchair=no` for Colégio Militar/Luz and Campo Pequeno, but Metro de Lisboa own 2026-07-27 announcement list both accessible — kept as known-accessible (primary source beat crowdsourced tag) but flagged in `stops.js` comment for re-check if rider report problem, per "surface disagreements, don't silently pick one" design in `docs/EXPANSION_ROADMAP.md`. Wider bus/tram stop-level Overpass query (non-metro) gave 2,453 wheelchair-tagged elements Lisbon-wide but nearly all `platform`/`stop_position` nodes, not matchable to Carris stop IDs without name/geo-fuzzy-match layer. (Investigated 2026-09-02.)
-- [x] Next step: built the geo-fuzzy-match layer — queried OSM city-wide (bbox over full Carris Metropolitana area) for `wheelchair=*` on `bus_stop`/`platform`/`tram_stop` nodes (247 found), matched each `wheelchair=yes` node to nearest Carris stop by haversine distance (≤20m), deduped by Carris stop ID. Result: **131 Carris stop IDs cross-confirmed accessible** — real signal, since Carris own feed ship `wheelchair_boarding=false` (no info) on all 12,752 stops. Wired into `stops.js` as `OSM_CONFIRMED_STOP_IDS`, applied at fetch time next to existing Carris/metro/ferry logic. With 5.2 metro adds, confirmed-accessible stop count go from 15+9=24 to 21+9+131=161. In-app disclosure note updated in all 7 languages. (Investigated + shipped 2026-09-02.)
-- [ ] Gap left: 116 of the 247 OSM-tagged nodes no match inside 20m (name variants, stops OSM track that Carris don't, or >20m drift) — looser match (wider radius + name similarity) could grab more but risk false positives; not worth it without spot-check pass. Metro stations still unmatched (26) and full city coverage still need Willeasy partnership (5.1) or more OSM tagging.
-
-### 5.3 Live Elevator/Escalator Status (first Firebase-backed feature)
-Goal: real-time Metro Lisboa elevator status where no public API exist today.
-- [x] First step: the public status *page* itself (`metrolisboa.pt/viajar/estado-das-linhas-e-elevadores`) is static WordPress post (`article:modified_time` over a month stale) — scraping it would NOT be live. Found real source instead: page own JS call undocumented WordPress AJAX endpoint, `GET https://www.metrolisboa.pt/wp-admin/admin-ajax.php?action=estado_linha_ajax_2022_nova_action` — no key, no auth, return live HTML fragment with real per-elevator status: line → station → `{Equipamento, Nº, Localização (which platform/direction), Estado: "Operacional" | "Fora de serviço"}`, plus per-line summary (e.g. "4/42 (9,52%) elevadores desta linha estão fora de serviço"). Confirmed real-time: spot-check show live single outages (e.g. Campo Pequeno elevator 1 "Fora de serviço" while elevators 2-3 same station "Operacional" — exactly the per-equipment grain 5.4 need). (Investigated 2026-09-02.)
-- [ ] Next step (need Firebase project — blocked on account access, not technical dead end): stand up scheduled Firebase Function that poll this endpoint, parse the HTML fragment (structure is regular: repeating station→equipment blocks, parseable with no headless browser), write normalized `{station, equipmentId, location, status, lastChecked}` to Firestore. Endpoint undocumented and unversioned — brittle by nature, watch for markup change; keep showing "last checked" timestamp per app never-fabricate-certainty rule.
-
-### 5.4 Outage-Aware Trip Warnings
-Goal: turn binary accessible/not flag into "accessible route exists, but the lift at [station] has been down since [time]."
-- [ ] First step (need 5.3 shipped): wire Firestore elevator-status read into existing results-render path in `app.js`/`map.js`.
-
-### 5.5 Last-Mile Sidewalk/Curb-Cut Routing
-Goal: the one accessibility power none of Google Maps, Citymapper, Moovit have. Biggest lift — own phase, gains from 5.2 OSM data but no depend on it.
-- [ ] First step: pull OpenSidewalks-tagged sidewalk/crossing/curb data for small radius around one pilot stop cluster via Overpass, precompute local pedestrian graph, prototype client-side A* (`ngraph.path`) over it before deciding to scale city-wide.
+- [Phase 5.1: Willeasy partnership](https://github.com/devotedpronet-cyber/transit-accessibility/issues/2) — blocked on partnership ask
+- [Phase 5.2: OSM/GTFS cross-validation](https://github.com/devotedpronet-cyber/transit-accessibility/issues/3) — 161 stops confirmed, gap left documented
+- [Phase 5.3: Live elevator status](https://github.com/devotedpronet-cyber/transit-accessibility/issues/4) — blocked on Firebase account access
+- [Phase 5.4: Outage-aware trip warnings](https://github.com/devotedpronet-cyber/transit-accessibility/issues/5) — depends on 5.3
+- [Phase 5.5: Last-mile sidewalk/curb-cut routing](https://github.com/devotedpronet-cyber/transit-accessibility/issues/6) — biggest lift, own phase
 
 ---
 
@@ -214,44 +196,18 @@ Goal: the one accessibility power none of Google Maps, Citymapper, Moovit have. 
 
 **What IS shipped instead**: plain outbound link to `google.com/maps/dir/...` that open Google Maps in new tab. No API key, nothing embedded in Leaflet map, so none of three objections apply. User own design (2026-09-01) — see Phase 3.3.
 
-## Backlog (persistent — do not drop across sessions)
+## Backlog & Moonshots
 
-- Mode-of-transport marker difference (bus/tram/metro/rail/ferry). Some research done: ~52-name Metro station roster (Wikipedia), 9 ferry terminal names (WebSearch), CP rail roster incomplete. Substring name-heuristic was tried and clearly rejected (false positives: "...ESTACIONA" matched as parking, bus stops near train stations mislabeled as rail) — never bring that back; need real per-mode feed data or explicit `mode` field from joined source.
-- Full official roster of all 47 accessible Metro stations (now only 15 of 47 confirmed by name from Metro de Lisboa own site sit in `stops.js`'s `ACCESSIBLE_METRO_STATIONS` overlay — extend if complete official list show up, e.g. from Metro de Lisboa accessibility page direct, not news articles).
-- Pedrouços/Algés ferry terminal accessibility unconfirmed (out of overlay until real data).
+Moved to GitHub issues:
 
-### Ranked candidates (expansion research, 2026-09-02)
+- [Backlog: mode markers, full metro roster, ferry confirmation](https://github.com/devotedpronet-cyber/transit-accessibility/issues/7)
+- [Moonshots: unscoped expansion ideas](https://github.com/devotedpronet-cyber/transit-accessibility/issues/8)
 
-Full writeup + sources: `docs/EXPANSION_ROADMAP.md`. Architecture note: Firebase (Functions/Firestore) confirmed viable as backend — not stuck with current static GH Pages deploy for these.
+Architecture note (kept — binding): Firebase (Functions/Firestore) confirmed viable as backend; not stuck with static GH Pages deploy for Phase 5+ features.
 
-- Live elevator/escalator status for Metro Lisboa — Metro Lisboa run status page (`metrolisboa.pt/viajar/estado-das-linhas-e-elevadores`) with no public API. Scheduled Firebase Function scrape/normalize into Firestore, served as real endpoint. Show "last checked" timestamp — scraping cannot back same certainty an API would.
-- Willeasy integration — Metro de Lisboa own per-station accessibility system (platform/entrance/stairs/escalator/elevator/lift-chair), per 2023 Público coverage. Check for direct export/API before more hand station-by-station confirming — likely close the 47-station gap direct.
-- OSM `wheelchair=*` / GTFS Pathways cross-validation — Overpass API (free, ODbL), cross-check Carris own accessibility claims and fill real `unknown` gaps (ferry terminals, murky stations) without faking certainty. Wheelmap write API could grow the existing OSM Notes crowdsource link into structured tag writes.
-- Last-mile sidewalk/curb-cut routing (AccessMap-style) — the one power none of Google Maps/Citymapper/Moovit have. Pull OSM sidewalk/crossing/curb data (OpenSidewalks tag schema) per stop-cluster via Firebase Function, precompute small local pedestrian graph, client-side A*/`ngraph.path` for final leg. Biggest lift on list — own phase.
-- Outage-aware trip warnings — depend on elevator-status item above. Show inline in results: "accessible route exists, but the lift at [station] has been down since [time]" not a binary flag.
+### Requested 2026-09-01 batch — done
 
-### Moonshots (unscoped, 2026-09-02 — not triaged for feasibility)
-
-Creative pass, on purpose unfiltered by current effort/architecture per direct order. Full writeup: `docs/EXPANSION_ROADMAP.md`.
-
-- Crowd-verified elevator status — QR code or geofenced "tap to confirm this is working" at the elevator, faster than any official feed update cycle.
-- Predictive accessibility — model which elevators fail most (time-of-day/day-of-week) from past status data, warn before trip.
-- Accessible-route social proof — "12 wheelchair users completed this route this week," Waze-style crowd-density model for accessibility confidence not traffic.
-- Companion/buddy matching — opt-in match of riders on like routes/times, hit "fear of being stranded alone" direct.
-- City accountability dashboard — public aggregate view of which stations/elevators fail most, civic-pressure tool (fits Civic Code contest own framing).
-- Voice-first/hands-free mode — full voice for riders with limited hand mobility, not layer bolted onto visual UI.
-- "Accessible day" trip chaining — verify whole multi-stop itinerary (pharmacy → park → café) end-to-end, not just point-to-point.
-- Physical world integration — QR codes at elevators/ramps (placed by city) linking into app live status + report flow.
-- Open accessibility data as the product — publish the cross-validated dataset (Carris + OSM + Willeasy + live status) as open API for other Lisbon apps/researchers.
-
-### Requested 2026-09-01 (in progress, this batch)
-
-1. [x] iOS UI/UX design pass on items 2-4 below, via context7 (Apple HIG / iOS patterns) before building.
-2. [x] Route section ("Route via accessible stops") must render right under the Search/GPS button group, not under the note/results list. — commit c1548e3
-3. [x] Kill the "accessible stops near me" results list. Beaten by turning "From" field into dropdown: nearest accessible stops sorted by distance, distance shown per stop, pick one set it as origin. — built, under review before commit
-4. [x] Bug: the "you are here" map marker and where map recenters after GPS button tap don't match — same coordinate should drive both. — commit 8434bea (`setViewAboveSheet` helper). Also build: tap-and-drag map to pick start location (pin-follows-map-center pattern) — commit 8483d59, reviewed + 2 bugs fixed pre-ship (race condition + closure-scoping in cancel).
-5. [x] `/v2/lines` join — stops now show real rider-facing line numbers (`stop.lines`) not empty field. Join `stop.line_ids` against `/v2/lines[].short_name`. — commit 812f0d2, `stops.js`.
-6. [x] External PR #1 (stale, 15 commits behind main, touched dead `gtfs.js`/`mockStops` code that no longer exist) — closed, not merged. 5 still-good a11y/security findings re-checked against current `main` and fixed direct instead: viewport `user-scalable=no` removed (WCAG 1.4.4), SRI hashes added to both Leaflet CDN tags, page heading bumped h2→h1, `<label for>` tie fixed on From/To inputs, `aria-live="polite" role="status"` added to 3 dynamic result containers. Verified in live browser (labels/status roles/heading all confirmed via JS `.labels` + accessibility tree, no console errors, 21/21 tests still pass). — commit 68ee7b4.
+All 6 items shipped. Full record: [changelog issue #9](https://github.com/devotedpronet-cyber/transit-accessibility/issues/9) (closed).
 
 ---
 
