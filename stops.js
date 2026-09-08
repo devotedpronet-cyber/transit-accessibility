@@ -37,6 +37,9 @@ const OSM_CONFIRMED_STOP_IDS = new Set([
   '172311', '172325', '172326', '172327', '172328', '172329', '172331', '172332', '172333', '172334',
   '172335', '172336', '172338', '172339', '172340', '172342', '172343', '172492', '172493', '172601',
   '7822',
+  // Widened match pass (2026-09-08): radius 20m -> 40m, gated on normalized name
+  // similarity to avoid false positives (see docs/EXPANSION_ROADMAP.md and issue #3).
+  '060205', '021007', '020199', '171135',
 ]);
 
 const STOPS_API = 'https://api.carrismetropolitana.pt/v2/stops';
