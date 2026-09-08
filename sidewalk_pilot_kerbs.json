@@ -1,0 +1,330 @@
+[
+  {
+    "id": 1122689130,
+    "lat": 38.715237,
+    "lon": -9.141637,
+    "tags": {
+      "button_operated": "no",
+      "crossing": "traffic_signals",
+      "crossing_ref": "zebra",
+      "highway": "crossing",
+      "tactile_paving": "no",
+      "traffic_signals:sound": "no",
+      "traffic_signals:vibration": "no"
+    }
+  },
+  {
+    "id": 1122689205,
+    "lat": 38.7152974,
+    "lon": -9.1415246,
+    "tags": {
+      "button_operated": "no",
+      "crossing": "traffic_signals",
+      "crossing_ref": "zebra",
+      "highway": "crossing",
+      "tactile_paving": "no",
+      "traffic_signals:sound": "no",
+      "traffic_signals:vibration": "no"
+    }
+  },
+  {
+    "id": 6501155045,
+    "lat": 38.7155349,
+    "lon": -9.1410961,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 6501155046,
+    "lat": 38.7155221,
+    "lon": -9.1410843,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 6501155051,
+    "lat": 38.7154318,
+    "lon": -9.1410502,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered"
+    }
+  },
+  {
+    "id": 6501155060,
+    "lat": 38.7152762,
+    "lon": -9.141076,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "raised"
+    }
+  },
+  {
+    "id": 6501155062,
+    "lat": 38.7152406,
+    "lon": -9.1410746,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "raised"
+    }
+  },
+  {
+    "id": 6501155063,
+    "lat": 38.7152223,
+    "lon": -9.1410719,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "raised"
+    }
+  },
+  {
+    "id": 6501155064,
+    "lat": 38.7152084,
+    "lon": -9.1410686,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "raised"
+    }
+  },
+  {
+    "id": 6501155065,
+    "lat": 38.7151812,
+    "lon": -9.1410585,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "raised"
+    }
+  },
+  {
+    "id": 6501155066,
+    "lat": 38.7151548,
+    "lon": -9.1410445,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "raised"
+    }
+  },
+  {
+    "id": 6501155067,
+    "lat": 38.7151342,
+    "lon": -9.1410313,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "raised"
+    }
+  },
+  {
+    "id": 6501155071,
+    "lat": 38.7151234,
+    "lon": -9.1410227,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "raised"
+    }
+  },
+  {
+    "id": 6522224205,
+    "lat": 38.7160865,
+    "lon": -9.1425036,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 6522224207,
+    "lat": 38.7162414,
+    "lon": -9.1422171,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 6522224208,
+    "lat": 38.7163102,
+    "lon": -9.14209,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 6522224209,
+    "lat": 38.7152175,
+    "lon": -9.1416734,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "raised",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 6522224210,
+    "lat": 38.7154894,
+    "lon": -9.141167,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 6522224211,
+    "lat": 38.7154405,
+    "lon": -9.1412579,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "raised",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 6522224212,
+    "lat": 38.7153212,
+    "lon": -9.1414802,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 6522224250,
+    "lat": 38.7150801,
+    "lon": -9.1413097,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "raised",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 6522224281,
+    "lat": 38.7151578,
+    "lon": -9.1416501,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered"
+    }
+  },
+  {
+    "id": 6532983153,
+    "lat": 38.7161865,
+    "lon": -9.1423186,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 6532983168,
+    "lat": 38.7161749,
+    "lon": -9.1423401,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 6538520567,
+    "lat": 38.7155091,
+    "lon": -9.1411347,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 6538543016,
+    "lat": 38.715573,
+    "lon": -9.1411301,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered"
+    }
+  },
+  {
+    "id": 12401200488,
+    "lat": 38.7161938,
+    "lon": -9.1426303,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "flush",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 13040563843,
+    "lat": 38.717159,
+    "lon": -9.1430972,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 13040564475,
+    "lat": 38.7172152,
+    "lon": -9.1428637,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 13040564494,
+    "lat": 38.7171325,
+    "lon": -9.1430196,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 13040564500,
+    "lat": 38.7164947,
+    "lon": -9.1417236,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 13040564508,
+    "lat": 38.7165186,
+    "lon": -9.1417401,
+    "tags": {
+      "crossing:markings": "no",
+      "crossing:signals": "no",
+      "highway": "crossing",
+      "tactile_paving": "no"
+    }
+  },
+  {
+    "id": 13040564512,
+    "lat": 38.716535,
+    "lon": -9.1417591,
+    "tags": {
+      "barrier": "kerb",
+      "kerb": "lowered",
+      "tactile_paving": "no"
+    }
+  }
+]
