@@ -1,6 +1,6 @@
 {
   "name": "lisbon-transit-accessibility-planner",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Find step-free accessible bus stops in Lisbon",
   "type": "module",
   "scripts": {
